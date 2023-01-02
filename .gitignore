@@ -1,0 +1,8 @@
+main
+*~
+*.o
+*.a
+*.d
+*.sw*
+*.bmp
+tags

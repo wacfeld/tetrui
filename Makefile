@@ -1,11 +1,11 @@
 CXX = g++
-CXXFLAGS = -g -MMD -Wall
+CXXFLAGS = -g -MMD -Wall -lSDL2main -lSDL2
 EXEC = $(shell basename $(CURDIR))
 LIBS = 
 OBJECTS = main.o
 DEPENDS = ${OBJECTS:.o=.d}
 ${EXEC}: ${OBJECTS}
-	${CXX} ${OBJECTS} -o ${EXEC} ${LIBS}
+	${CXX} ${OBJECTS} ${CXXFLAGS} -o ${EXEC} ${LIBS}
 -include ${DEPENDS}
 .PHONY: clean
 clean:
