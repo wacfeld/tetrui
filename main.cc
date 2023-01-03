@@ -22,7 +22,10 @@ struct winsurf
 
 struct winsurf ws = {NULL, NULL};
 
-int board[20][10];
+// 0 = empty
+// L, J, S, Z, I, O, T = respective colored mino
+int board[40][10];
+// guideline: there is a 20x10 buffer area above visible play area
 
 SDL_Surface *loadBMP(const char *name)
 {
@@ -83,8 +86,15 @@ void close(struct winsurf ws, std::vector<SDL_Surface *> surfs)
 }
 
 // given surface and coords on tetris board, scale and place mino (does not update surface)
-void BlitMino(SDL_Surface *surf, int row, int col)
+void blitmino(SDL_Surface *surf, int row, int col)
 {
+  // check bounds
+  if(row >= 20 || col >= 10 || row < 0 || col < 0)
+  {
+    printf("out of bounds: %d %d\n", row, col);
+    return;
+  }
+  
   SDL_Rect dest;
   dest.w = MINO_LEN;
   dest.h = MINO_LEN;
@@ -100,13 +110,14 @@ int main(int argc, char **args)
 
   SDL_FillRect( ws.surf, NULL, SDL_MapRGB( ws.surf->format, 0xFF, 0xFF, 0xFF ) );
 
-  SDL_Surface *mino = loadBMP("mino.bmp");
+  SDL_Surface *imino = loadBMP("sprites/Imino.bmp");
+  SDL_Surface *bgmino = loadBMP("sprites/bg.bmp");
 
-  for(int i = 0; i < 9; i++)
+  for(int i = 0; i < 10; i++)
   {
-    for(int j = 0; j < 19; j++)
+    for(int j = 0; j < 20; j++)
     {
-      BlitMino(mino, j, i);
+      blitmino(bgmino, j, i);
     }
   }
 
@@ -138,14 +149,14 @@ int main(int argc, char **args)
         quit = true;
         printf("quitting\n");
       }
-      else if( e.type == SDL_KEYDOWN )
-      {
-        printf("%d\n", e.key.keysym.sym);
-      }
+      /* else if( e.type == SDL_KEYDOWN ) */
+      /* { */
+      /*   printf("%d\n", e.key.keysym.sym); */
+      /* } */
     }
   }
 
-  close(ws, {mino});
+  close(ws, {imino, bgmino});
 
   return 0;
 }

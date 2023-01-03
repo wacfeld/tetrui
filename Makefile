@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -g -MMD -Wall -lSDL2main -lSDL2
-EXEC = $(shell basename $(CURDIR))
+EXEC = $(shell basename $(CURDIR)).out
 LIBS = 
 OBJECTS = main.o
 DEPENDS = ${OBJECTS:.o=.d}
