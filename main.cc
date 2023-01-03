@@ -29,8 +29,8 @@ const int vis_width = 10;
 const int SCREEN_WIDTH = MINO_LEN*vis_width;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
-// rotation amounts
-enum rot {CW, CCW, FLIP}; // FLIP means 180
+// rotation directions
+enum rot {CW, FLIP, CCW}; // FLIP means 180
 
 // NONE specifies that a square is empty
 enum type {NONE, I, J, L, S, Z, O, T};
@@ -160,7 +160,7 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
   // convert bottom-left-based coords to top-left-based for graphics
   row = vis_height - row - 1;
   // printf("%d %d\n", row, col);
-  
+
   SDL_Rect dest;
   dest.w = MINO_LEN;
   dest.h = MINO_LEN;
@@ -216,7 +216,7 @@ bool rotatepiece(struct piece &p, enum rot r)
     gboard[m[0]][m[1]] = NONE;
   }
 
-  // copy the coords and double them
+  // copy the coords and double them to match up with center
   auto cp = p.p;
   for(auto &m : cp)
   {
@@ -224,7 +224,64 @@ bool rotatepiece(struct piece &p, enum rot r)
     m[1] *= 2;
   }
 
-  bool moved = false;
+  // grab center coords
+  int cx = p.c[0];
+  int cy = p.c[1];
+
+  // rotate all minos around the center
+  for(auto &m : cp)
+  {
+    // diff := mino - center
+    int dx = m[0] - cx;
+    int dy = m[1] - cy;
+
+    // rotate difference vector
+    if(r == CW) // swap then negate x coord
+    {
+      int temp = dx;
+      dx = -dy;
+      dy = temp;
+    }
+    if(r == CCW) // swap then negate y coord
+    {
+      int temp = dy;
+      dy = -dx;
+      dx = temp;
+    }
+    if(r == FLIP) // negate both coords
+    {
+      dy = -dy;
+      dx = -dx;
+    }
+
+    // mino := center + newdiff
+    m[0] = cx + dx;
+    m[1] = cy + dy;
+
+    // halve coords
+    m[0] /= 2;
+    m[1] /= 2;
+  }
+
+  // check for collisions/out of bounds
+  for(auto &m : cp)
+  {
+    if(!goodcoords(m[0], m[1]))
+    {
+      // TODO deal with kicks, etc.
+      // in the meantime, simply return failure
+      return false;
+    }
+  }
+
+  // update piece & board
+  p.p = cp;
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = p.t;
+  }
+
+  return true;
 }
 
 // move piece according to delta (do not draw)
@@ -237,7 +294,7 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
   {
     gboard[m[0]][m[1]] = NONE;
   }
-  
+
   // make a copy of the coords & center
   auto cp = p.p;
   auto cc = p.c;
@@ -250,29 +307,25 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
       // printf("%d %d\n", m[0], m[1]);
       m[0] += dx;
       m[1] += dy;
-      // printf("%d %d\n", m[0], m[1]);
-    }
 
-    // update position of center
-    cc[0] += 2*dx;
-    cc[1] += 2*dy;
-
-    for(auto &m : cp) // check for out of bounds/collisions
-    {
+      // check for out of bounds/collisions
       if(!goodcoords(m[0], m[1]))
       {
         goto stopmoving;
       }
     }
 
-    // if all coords valid, update piece
+    // update position of center
+    cc[0] += 2*dx;
+    cc[1] += 2*dy;
+
     p.p = cp;
     p.c = cc;
     moved = true;
 
   } while(rep);
 stopmoving:
-  
+
   // update board
   for(auto &m : p.p)
   {
@@ -283,7 +336,7 @@ stopmoving:
   return moved;
 }
 
-// game is over if 
+// game is over if
 bool topout(struct piece p)
 {
   // TODO check for exceeding buffer (only possible in competitive)
@@ -308,7 +361,7 @@ struct piece spawnpiece(enum type t)
 
   // spawn on 21st row (0-indexed)
   // center of rotation below piece (or as low as possible)
-  
+
 
   if(t == I)
   {
@@ -360,7 +413,7 @@ struct piece spawnpiece(enum type t)
     gstate = LOST;
     return p;
   }
-  
+
 
   // write piece onto board
   for(auto &m : p.p)
@@ -445,7 +498,7 @@ int main(int argc, char **args)
 
   bool quit = false;
   SDL_Event e;
-  
+
   while(!quit)
   {
     while( SDL_PollEvent( &e ) != 0 )
