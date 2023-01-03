@@ -19,12 +19,18 @@ const int MINO_LEN = 32;
 // total (including buffer) and visible dimensions of board
 const int tot_height = 40;
 const int tot_width = 10;
+
 const int vis_height = 20;
+// const int vis_height = 23;
+
 const int vis_width = 10;
 
 // board is 10x20
 const int SCREEN_WIDTH = MINO_LEN*vis_width;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
+
+// rotation amounts
+enum rot {CW, CCW, FLIP}; // FLIP means 180
 
 // NONE specifies that a square is empty
 enum type {NONE, I, J, L, S, Z, O, T};
@@ -49,7 +55,7 @@ struct piece
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::vector<SDL_Surface *> sprites(7);
+std::vector<SDL_Surface *> sprites(8);
 
 // graphical board top-left corner
 const int boardX = 0;
@@ -178,6 +184,14 @@ void drawpiece(struct piece p)
   }
 }
 
+void undrawpiece(struct piece p)
+{
+  for(auto &m : p.p)
+  {
+    blitmino(boardX, boardY, sprites[NONE], m[0], m[1]);
+  }
+}
+
 // return false if out of bounds, or collides with existing mino
 bool goodcoords(int x, int y)
 {
@@ -188,6 +202,29 @@ bool goodcoords(int x, int y)
   }
 
   return true;
+}
+
+// rotate piece
+// TODO: kicks, etc.
+// currently only rotates around center
+// returns true if successfully rotated (rotating O always returns true)
+bool rotatepiece(struct piece &p, enum rot r)
+{
+  // delete piece from board
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = NONE;
+  }
+
+  // copy the coords and double them
+  auto cp = p.p;
+  for(auto &m : cp)
+  {
+    m[0] *= 2;
+    m[1] *= 2;
+  }
+
+  bool moved = false;
 }
 
 // move piece according to delta (do not draw)
@@ -201,13 +238,14 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
     gboard[m[0]][m[1]] = NONE;
   }
   
-  // make a copy of the coords
-  auto copy = p.p;
+  // make a copy of the coords & center
+  auto cp = p.p;
+  auto cc = p.c;
 
   bool moved = false;
   do
   {
-    for(auto &m : copy) // update position of copy
+    for(auto &m : cp) // update position
     {
       // printf("%d %d\n", m[0], m[1]);
       m[0] += dx;
@@ -215,7 +253,11 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
       // printf("%d %d\n", m[0], m[1]);
     }
 
-    for(auto &m : copy) // check for out of bounds/collisions
+    // update position of center
+    cc[0] += 2*dx;
+    cc[1] += 2*dy;
+
+    for(auto &m : cp) // check for out of bounds/collisions
     {
       if(!goodcoords(m[0], m[1]))
       {
@@ -224,7 +266,8 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
     }
 
     // if all coords valid, update piece
-    p.p = copy;
+    p.p = cp;
+    p.c = cc;
     moved = true;
 
   } while(rep);
@@ -354,7 +397,7 @@ int main(int argc, char **args)
   sprites[Z] = zspr;
   sprites[T] = tspr;
   sprites[O] = ospr;
-  sprites.push_back(bgspr);
+  sprites[NONE] = bgspr;
 
   for(int i = 0; i < 10; i++)
   {
@@ -364,56 +407,41 @@ int main(int argc, char **args)
     }
   }
 
-  struct piece p,q,r,s,t,u,v;
-  p = spawnpiece(I);
-  movepiece(p, 0, -1, 1);
+  // struct piece p,q,r,s,t,u,v;
+  // p = spawnpiece(I);
+  // movepiece(p, 0, -1, 1);
+  // drawpiece(p);
+
+  // q = spawnpiece(T);
+  // movepiece(q, 0, -1, 1);
+  // drawpiece(q);
+
+  // r = spawnpiece(O);
+  // movepiece(r, 0, -1, 1);
+  // drawpiece(r);
+
+  // s = spawnpiece(S);
+  // movepiece(s, 0, -1, 1);
+  // drawpiece(s);
+
+  // t = spawnpiece(Z);
+  // movepiece(t, 0, -1, 1);
+  // drawpiece(t);
+
+  // u = spawnpiece(J);
+  // movepiece(u, 0, -1, 1);
+  // drawpiece(u);
+
+  // v = spawnpiece(L);
+  // movepiece(v, 0, -1, 1);
+  // drawpiece(v);
+
+
+  struct piece p = spawnpiece(T);
   drawpiece(p);
-
-  q = spawnpiece(T);
-  movepiece(q, 0, -1, 1);
-  drawpiece(q);
-
-  r = spawnpiece(O);
-  movepiece(r, 0, -1, 1);
-  drawpiece(r);
-
-  s = spawnpiece(S);
-  movepiece(s, 0, -1, 1);
-  drawpiece(s);
-
-  t = spawnpiece(Z);
-  movepiece(t, 0, -1, 1);
-  drawpiece(t);
-
-  u = spawnpiece(J);
-  movepiece(u, 0, -1, 1);
-  drawpiece(u);
-
-  v = spawnpiece(L);
-  movepiece(v, 0, -1, 1);
-  drawpiece(v);
-
-  
 
   //Update the surface
   SDL_UpdateWindowSurface( gwin );
-
-  // blitmino(0, 0, ispr, 1, 1);
-  // blitmino(0, 0, tspr, 9, 19);
-  // blitmino(0, 0, tspr, 10, 19);
-
-  /* SDL_Rect dest; */
-  /* dest.x = 50; */
-  /* dest.y = 50; */
-  // sch.w = SCREEN_WIDTH;
-  // sch.h = SCREEN_HEIGHT;
-  /* SDL_BlitSurface( hey, NULL, ws.surf, &dest ); */
-
-  // tetris is 10x20
-  // guideline https://tetris.wiki/Tetris_Guideline
-
-  /* SDL_BlitSurface( hey, NULL, ws.surf, NULL ); */
-
 
   bool quit = false;
   SDL_Event e;
@@ -428,10 +456,35 @@ int main(int argc, char **args)
         quit = true;
         fprintf(stderr, "quitting\n");
       }
-      /* else if( e.type == SDL_KEYDOWN ) */
-      /* { */
-      /*   printf("%d\n", e.key.keysym.sym); */
-      /* } */
+
+      else if( e.type == SDL_KEYDOWN )
+      {
+        auto sym = e.key.keysym.sym;
+
+        if(sym == SDLK_UP)
+        {
+          undrawpiece(p);
+          movepiece(p, 0, 1, 0);
+        }
+        else if(sym == SDLK_DOWN)
+        {
+          undrawpiece(p);
+          movepiece(p, 0, -1, 0);
+        }
+        else if(sym == SDLK_LEFT)
+        {
+          undrawpiece(p);
+          movepiece(p, -1, 0, 0);
+        }
+        else if(sym == SDLK_RIGHT)
+        {
+          undrawpiece(p);
+          movepiece(p, 1, 0, 0);
+        }
+
+        drawpiece(p);
+        SDL_UpdateWindowSurface( gwin );
+      }
     }
   }
 
@@ -441,3 +494,4 @@ int main(int argc, char **args)
 }
 
 // keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
+// guideline https://tetris.wiki/Tetris_Guideline
