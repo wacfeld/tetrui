@@ -236,13 +236,13 @@ bool rotatepiece(struct piece &p, enum rot r)
     int dy = m[1] - cy;
 
     // rotate difference vector
-    if(r == CW) // swap then negate x coord
+    if(r == CCW) // swap then negate x coord
     {
       int temp = dx;
       dx = -dy;
       dy = temp;
     }
-    if(r == CCW) // swap then negate y coord
+    if(r == CW) // swap then negate y coord
     {
       int temp = dy;
       dy = -dx;
@@ -250,6 +250,7 @@ bool rotatepiece(struct piece &p, enum rot r)
     }
     if(r == FLIP) // negate both coords
     {
+      // puts("flipping");
       dy = -dy;
       dx = -dx;
     }
@@ -362,7 +363,6 @@ struct piece spawnpiece(enum type t)
   // spawn on 21st row (0-indexed)
   // center of rotation below piece (or as low as possible)
 
-
   if(t == I)
   {
     p.p = {{{SX0, SY0}, {SX1, SY0}, {SX2, SY0}, {SX3, SY0}}};
@@ -460,37 +460,7 @@ int main(int argc, char **args)
     }
   }
 
-  // struct piece p,q,r,s,t,u,v;
-  // p = spawnpiece(I);
-  // movepiece(p, 0, -1, 1);
-  // drawpiece(p);
-
-  // q = spawnpiece(T);
-  // movepiece(q, 0, -1, 1);
-  // drawpiece(q);
-
-  // r = spawnpiece(O);
-  // movepiece(r, 0, -1, 1);
-  // drawpiece(r);
-
-  // s = spawnpiece(S);
-  // movepiece(s, 0, -1, 1);
-  // drawpiece(s);
-
-  // t = spawnpiece(Z);
-  // movepiece(t, 0, -1, 1);
-  // drawpiece(t);
-
-  // u = spawnpiece(J);
-  // movepiece(u, 0, -1, 1);
-  // drawpiece(u);
-
-  // v = spawnpiece(L);
-  // movepiece(v, 0, -1, 1);
-  // drawpiece(v);
-
-
-  struct piece p = spawnpiece(T);
+  struct piece p = spawnpiece(O);
   drawpiece(p);
 
   //Update the surface
@@ -514,6 +484,7 @@ int main(int argc, char **args)
       {
         auto sym = e.key.keysym.sym;
 
+        // translation
         if(sym == SDLK_UP)
         {
           undrawpiece(p);
@@ -533,6 +504,23 @@ int main(int argc, char **args)
         {
           undrawpiece(p);
           movepiece(p, 1, 0, 0);
+        }
+
+        // rotation (currently dvorak keyboard)
+        else if(sym == SDLK_a) // CCW
+        {
+          undrawpiece(p);
+          rotatepiece(p, CCW);
+        }
+        else if(sym == SDLK_o) // 180
+        {
+          undrawpiece(p);
+          rotatepiece(p, FLIP);
+        }
+        else if(sym == SDLK_e) // CW
+        {
+          undrawpiece(p);
+          rotatepiece(p, CW);
         }
 
         drawpiece(p);
