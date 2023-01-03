@@ -83,8 +83,9 @@ const int boardY = 0;
 
 // 0 = empty
 // L, J, S, Z, I, O, T = respective colored mino
-enum type gboard[tot_width][tot_height];
+enum type gboard[tot_width][tot_height+1];
 // guideline: there is a 10x20 buffer area above visible play area
+// the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
 
 enum state {PLAYING, LOST};
 enum state gstate;
@@ -200,6 +201,7 @@ bool goodcoords(int x, int y)
   if(x < 0 || y < 0 || x >= tot_width || y >= tot_height
      || gboard[x][y] != NONE)
   {
+    // puts("these coords are NOT good");
     return false;
   }
 
@@ -459,7 +461,7 @@ bool grounded(struct piece &p)
   // inspect the cell just below every mino
   for(auto &m : p.p)
   {
-    if(!goodcoords(m[0], m[1]))
+    if(!goodcoords(m[0], m[1]-1))
     {
       g = true;
     }
@@ -472,6 +474,62 @@ bool grounded(struct piece &p)
   }
 
   return g;
+}
+
+// check for line clears, spawn new piece and draw
+// spawn next piece (using whatever selection process) and draw
+struct piece nextpiece(struct piece old)
+{
+  // TODO implement 7-bag
+  // TODO check for tetrises, tspins, etc.
+
+  // check for line clears
+  std::set<int, std::greater> rows; // rows to clear
+  // std::greater puts the ints in descending order, which makes clearing the lines easire later
+  for(auto &m : old.p) // loop through 4 minoes and check their rows
+  {
+    if(!rows.count(m[1]))
+    {
+      // check if line is full
+      bool full = true;
+      for(int i = 0; i < tot_width; i++)
+      {
+        if(gboard[i][m[1]] == NONE)
+        {
+          full = false;
+        }
+      }
+
+      // if full, add to rows
+      if(full)
+      {
+        rows.insert(m[1]);
+      }
+    }
+  }
+
+  // execute the clears
+  // perhaps placing the column loop outside improves locality of reference
+  for(int i = 0; i < tot_width; i++)
+  {
+    // this isn't the most efficient way to clear multiple lines at a time but it shouldn't be a big deal
+    for(int r : rows) // iterate in descending order (thanks to std::greater)
+    {
+      // gboard contains an extra row at the very top so this works
+      memmove(gboard[i][r], gboard[i][r+1], sizeof(**gboard) * (tot_height - r));
+    }
+  }
+
+  // redraw everything relevant
+  
+  // spawn new piece
+  static enum type pieces[] = {I, J, L, S, Z, O, T};
+  static int npieces = sizeof(pieces) / sizeof(*pieces);
+
+  struct piece p = spawnpiece(pieces[rand() % npieces]);
+  drawpiece(p);
+
+  return p;
 }
 
 int main(int argc, char **args)
@@ -512,9 +570,8 @@ int main(int argc, char **args)
 
   // get random piece
   // TODO replace with 7-bag
-  enum type pieces[] = {I, J, L, S, Z, O, T};
-  int npieces = sizeof(pieces) / sizeof(*pieces);
-  struct piece p = spawnpiece(pieces[rand() % npieces]);
+  // struct piece p = spawnpiece(pieces[rand() % npieces]);
+  struct piece p = spawnnext();
   drawpiece(p);
 
   //Update the surface
@@ -568,9 +625,12 @@ int main(int argc, char **args)
       // timer exceeded lock delay, lock down
       if(curtime - lastreset >= lockdelay)
       {
-        // spawn new piece and continue
-        p = spawnpiece(pieces[rand() % npieces]);
-        drawpiece(p);
+        // spawn new piece, reset variables, and continue
+        p = nextpiece();
+        SDL_UpdateWindowSurface(gwin);
+
+        locking = false;
+        lastgrav = curtime;
 
         continue;
       }
