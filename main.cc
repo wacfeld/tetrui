@@ -15,15 +15,22 @@ typedef unsigned char uchar;
 
 const int MINO_LEN = 32;
 
+// total (including buffer) and visible dimensions of board
+const int tot_height = 40;
+const int tot_width = 10;
+const int vis_height = 23;
+const int vis_width = 10;
+
 // board is 10x20
-const int SCREEN_WIDTH = MINO_LEN*10;
-const int SCREEN_HEIGHT = MINO_LEN*20;
+const int SCREEN_WIDTH = MINO_LEN*vis_width;
+const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
-// enum type {I, J, L, S, Z, O, T};
+enum type {I, J, L, S, Z, O, T};
 
-// a piece is a center of rotation along with 4 minoes
+// a piece is a type, a center of rotation, and 4 minoes
 struct piece
 {
+  char t;
   // center of rotation coords may be in-between minoes (for I and O)
   // hence c[2] coords are stored as double their actual value
   std::array<uchar, 2> c;
@@ -40,13 +47,7 @@ struct piece
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::vector<SDL_Surface *> sprites;
-
-// total (including buffer) and visible dimensions of board
-const int tot_height = 40;
-const int tot_width = 10;
-const int vis_height = 20;
-const int vis_width = 10;
+std::vector<SDL_Surface *> sprites(7);
 
 // graphical board top-left corner
 const int boardX = 0;
@@ -72,8 +73,8 @@ const int boardY = 0;
 
 // 0 = empty
 // L, J, S, Z, I, O, T = respective colored mino
-int gboard[tot_height][20];
-// guideline: there is a 20x10 buffer area above visible play area
+enum type gboard[tot_width][tot_height];
+// guideline: there is a 10x20 buffer area above visible play area
 
 enum state {PLAYING, LOST};
 enum state gstate;
@@ -81,6 +82,7 @@ enum state gstate;
 /* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
 void close()
 {
+  return;
   SDL_DestroyWindow(gwin);
   gwin = NULL;
   gsurf = NULL;
@@ -138,6 +140,8 @@ void init(const char *title, int w, int h)
 // given top-left corner of board, surface and coords on tetris board, scale and place mino (does not update surface)
 void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
 {
+  // puts("hi");
+  // printf("%d %d\n", col, row);
   // check bounds
   if(row >= vis_height || col >= vis_width || row < 0 || col < 0)
   {
@@ -147,12 +151,15 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
 
   // convert bottom-left-based coords to top-left-based for graphics
   row = vis_height - row - 1;
+  printf("%d %d\n", row, col);
   
   SDL_Rect dest;
   dest.w = MINO_LEN;
   dest.h = MINO_LEN;
   dest.x = X+col * MINO_LEN;
   dest.y = Y+row * MINO_LEN;
+
+  printf("!!! %d %d\n", dest.x, dest.y);
 
   SDL_BlitScaled(surf, NULL, gsurf, &dest);
 }
@@ -164,7 +171,8 @@ void drawpiece(struct piece p)
 {
   for(auto m : p.p)
   {
-    blitmino(boardX, boardY, gsurf, m[0], m[1]);
+    // puts("hey");
+    blitmino(boardX, boardY, sprites[p.t], m[0], m[1]);
   }
 }
 
@@ -186,45 +194,46 @@ int topout(struct piece p)
 
 // spawn a piece above the playing field according to guideline
 // see https://tetris.fandom.com/wiki/SRS?file=SRS-pieces.png
-struct piece spawnpiece(char t)
+struct piece spawnpiece(enum type t)
 {
   struct piece p;
+  p.t = t;
 
   // spawn on 21st row (0-indexed)
   // center of rotation below piece (or as low as possible)
   
 
-  if(t == 'i')
+  if(t == I)
   {
     p.p = {{{SX0, SY0}, {SX1, SY0}, {SX2, SY0}, {SX3, SY0}}};
     p.c = ICENT; // (4.5, 19.5) doubled
   }
-  else if(t == 'j')
+  else if(t == J)
   {
     p.p = {{{SX0, SY1}, {SX0, SY0}, {SX1,SY0}, {SX2,SY0}}};
     p.c = CENT;
   }
-  else if(t == 'l')
+  else if(t == L)
   {
     p.p = {{{SX0, SY0}, {SX1, SY0}, {SX2, SY0}, {SX2, SY1}}};
     p.c = CENT;
   }
-  else if(t == 's')
+  else if(t == S)
   {
     p.p = {{{SX0, SY0}, {SX1, SY0}, {SX1, SY1}, {SX2, SY1}}};
     p.c = CENT;
   }
-  else if(t == 'z')
+  else if(t == Z)
   {
     p.p = {{{SX0, SY1}, {SX1, SY1}, {SX1, SY0}, {SX2, SY0}}};
     p.c = CENT;
   }
-  else if(t == 'o')
+  else if(t == O)
   {
     p.p = {{{SX1, SY0}, {SX1, SY1}, {SX2, SY0}, {SX2, SY1}}};
     p.c = OCENT;
   }
-  else if(t == 't')
+  else if(t == T)
   {
     p.p = {{{SX0, SY0}, {SX1, SY0}, {SX1, SY1}, {SX2, SY0}}};
     p.c = CENT;
@@ -244,6 +253,7 @@ struct piece spawnpiece(char t)
     gstate = LOST;
     return p;
   }
+  
 
   // write piece onto board
   for(auto m : p.p)
@@ -253,6 +263,15 @@ struct piece spawnpiece(char t)
 
   // move piece down
   // TODO
+
+  return p;
+}
+
+// move piece according to delta (do not draw)
+// if rep is true, move until it hits a barrier
+void movepiece(struct piece *p, int dx, int dy, bool rep)
+{
+  
 }
 
 int main(int argc, char **args)
@@ -271,7 +290,15 @@ int main(int argc, char **args)
   SDL_Surface *tspr = loadBMP("sprites/T.bmp");
   SDL_Surface *bgspr = loadBMP("sprites/bg.bmp");
 
-  // draw background
+  sprites[I] = ispr;
+  sprites[J] = jspr;
+  sprites[L] = lspr;
+  sprites[S] = sspr;
+  sprites[Z] = zspr;
+  sprites[T] = tspr;
+  sprites[O] = ospr;
+  sprites.push_back(bgspr);
+
   for(int i = 0; i < 10; i++)
   {
     for(int j = 0; j < 20; j++)
@@ -280,9 +307,12 @@ int main(int argc, char **args)
     }
   }
 
-  blitmino(0, 0, ispr, 1, 1);
-  blitmino(0, 0, tspr, 9, 19);
-  blitmino(0, 0, tspr, 10, 19);
+  struct piece p = spawnpiece(I);
+  drawpiece(p);
+
+  // blitmino(0, 0, ispr, 1, 1);
+  // blitmino(0, 0, tspr, 9, 19);
+  // blitmino(0, 0, tspr, 10, 19);
 
   /* SDL_Rect dest; */
   /* dest.x = 50; */
