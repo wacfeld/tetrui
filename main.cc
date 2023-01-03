@@ -5,11 +5,13 @@
 #include <stdlib.h>
 #include <vector>
 #include <array>
+#include <time.h>
 
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 #define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); close(); exit(1); } while(0)
 
 typedef unsigned char uchar;
+typedef unsigned int uint;
 
 //Screen dimension constants
 // my screen is 1366x768
@@ -33,7 +35,7 @@ const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 enum rot {CW, FLIP, CCW}; // FLIP means 180
 
 // NONE specifies that a square is empty
-enum type {NONE, I, J, L, S, Z, O, T};
+enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7};
 
 // a piece is a type, a center of rotation, and 4 minoes
 struct piece
@@ -175,7 +177,7 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
 // given a piece, draw the parts of it that are on the visible play area
 // (don't draw any parts in the buffer area)
 // (don't update screen)
-void drawpiece(struct piece p)
+void drawpiece(struct piece &p)
 {
   for(auto &m : p.p)
   {
@@ -184,7 +186,7 @@ void drawpiece(struct piece p)
   }
 }
 
-void undrawpiece(struct piece p)
+void undrawpiece(struct piece &p)
 {
   for(auto &m : p.p)
   {
@@ -275,12 +277,18 @@ bool rotatepiece(struct piece &p, enum rot r)
     }
   }
 
+  // undraw piece
+  undrawpiece(p);
+
   // update piece & board
   p.p = cp;
   for(auto &m : p.p)
   {
     gboard[m[0]][m[1]] = p.t;
   }
+
+  // redraw piece
+  drawpiece(p);
 
   return true;
 }
@@ -320,25 +328,35 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
     cc[0] += 2*dx;
     cc[1] += 2*dy;
 
+    if(!moved) // on first successful move, undraw piece
+    {
+      undrawpiece(p);
+      moved = true;
+    }
+
     p.p = cp;
     p.c = cc;
-    moved = true;
 
   } while(rep);
 stopmoving:
 
-  // update board
+  // update board, redraw piece
   for(auto &m : p.p)
   {
     // printf("%d %d\n", m[0], m[1]);
     gboard[m[0]][m[1]] = p.t;
   }
 
+  if(moved)
+  {
+    drawpiece(p);
+  }
+
   return moved;
 }
 
-// game is over if
-bool topout(struct piece p)
+// game is over if buffer exceeded or piece spawn creates collision
+bool topout(struct piece &p)
 {
   // TODO check for exceeding buffer (only possible in competitive)
 
@@ -427,6 +445,35 @@ struct piece spawnpiece(enum type t)
   return p;
 }
 
+// returns true if piece touching ground
+bool grounded(struct piece &p)
+{
+  // delete piece from board temporarily
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = NONE;
+  }
+
+  bool g = false;
+
+  // inspect the cell just below every mino
+  for(auto &m : p.p)
+  {
+    if(!goodcoords(m[0], m[1]))
+    {
+      g = true;
+    }
+  }
+
+  // reinstate piece
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = p.t;
+  }
+
+  return g;
+}
+
 int main(int argc, char **args)
 {
   // initialize window
@@ -443,6 +490,7 @@ int main(int argc, char **args)
   SDL_Surface *tspr = loadBMP("sprites/T.bmp");
   SDL_Surface *bgspr = loadBMP("sprites/bg.bmp");
 
+  sprites[NONE] = bgspr;
   sprites[I] = ispr;
   sprites[J] = jspr;
   sprites[L] = lspr;
@@ -450,7 +498,6 @@ int main(int argc, char **args)
   sprites[Z] = zspr;
   sprites[T] = tspr;
   sprites[O] = ospr;
-  sprites[NONE] = bgspr;
 
   for(int i = 0; i < 10; i++)
   {
@@ -460,17 +507,79 @@ int main(int argc, char **args)
     }
   }
 
-  struct piece p = spawnpiece(O);
+  // init RNG
+  srand(time(NULL));
+
+  // get random piece
+  // TODO replace with 7-bag
+  enum type pieces[] = {I, J, L, S, Z, O, T};
+  int npieces = sizeof(pieces) / sizeof(*pieces);
+  struct piece p = spawnpiece(pieces[rand() % npieces]);
   drawpiece(p);
 
   //Update the surface
   SDL_UpdateWindowSurface( gwin );
+
+  // gravity
+  uint lastgrav = 0; // ms since last gravity tick
+  uint gravdelay = 1000; // ms between gravity ticks
+  uint curtime = 0; // current time in ms
+
+  // lock down
+  // int movecount = 0;
+  uint lockdelay = 500; // ms before piece locks
+  uint lastreset = 0; // when locktimer >= lockdelay, piece locks
+  bool locking = false; // becomes true whenever piece is touching the ground
 
   bool quit = false;
   SDL_Event e;
 
   while(!quit)
   {
+    // update time
+    curtime = SDL_GetTicks();
+
+    // check gravity timing
+    if(curtime - lastgrav >= gravdelay)
+    {
+      // update timer
+      lastgrav = curtime;
+
+      // move down once
+      movepiece(p, 0, -1, 0);
+
+      // update screen
+      SDL_UpdateWindowSurface( gwin );
+    }
+
+    // if touching the ground, check for lockdown
+    if(grounded(p))
+    {
+      // currently infinity
+      // TODO change to move reset
+
+      if(!locking) // start timer
+      {
+      puts("grounded");
+        locking = true;
+        lastreset = curtime;
+      }
+
+      // timer exceeded lock delay, lock down
+      if(curtime - lastreset >= lockdelay)
+      {
+        // spawn new piece and continue
+        p = spawnpiece(pieces[rand() % npieces]);
+        drawpiece(p);
+
+        continue;
+      }
+    }
+    else
+    {
+      locking = false;
+    }
+
     while( SDL_PollEvent( &e ) != 0 )
     {
       //User requests quit
@@ -484,46 +593,46 @@ int main(int argc, char **args)
       {
         auto sym = e.key.keysym.sym;
 
+        bool moved = false;
+
         // translation
         if(sym == SDLK_UP)
         {
-          undrawpiece(p);
-          movepiece(p, 0, 1, 0);
+          moved = movepiece(p, 0, 1, 0);
         }
         else if(sym == SDLK_DOWN)
         {
-          undrawpiece(p);
-          movepiece(p, 0, -1, 0);
+          moved = movepiece(p, 0, -1, 0);
         }
         else if(sym == SDLK_LEFT)
         {
-          undrawpiece(p);
-          movepiece(p, -1, 0, 0);
+          moved = movepiece(p, -1, 0, 0);
         }
         else if(sym == SDLK_RIGHT)
         {
-          undrawpiece(p);
-          movepiece(p, 1, 0, 0);
+          moved = movepiece(p, 1, 0, 0);
         }
 
         // rotation (currently dvorak keyboard)
         else if(sym == SDLK_a) // CCW
         {
-          undrawpiece(p);
-          rotatepiece(p, CCW);
+          moved = rotatepiece(p, CCW);
         }
         else if(sym == SDLK_o) // 180
         {
-          undrawpiece(p);
-          rotatepiece(p, FLIP);
+          moved = rotatepiece(p, FLIP);
         }
         else if(sym == SDLK_e) // CW
         {
-          undrawpiece(p);
-          rotatepiece(p, CW);
+          moved = rotatepiece(p, CW);
         }
 
-        drawpiece(p);
+        // reset lock timer
+        if(moved && locking)
+        {
+          lastreset = curtime;
+        }
+
         SDL_UpdateWindowSurface( gwin );
       }
     }
