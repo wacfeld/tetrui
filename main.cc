@@ -6,6 +6,7 @@
 #include <vector>
 #include <array>
 
+#define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 #define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); close(); exit(1); } while(0)
 
 typedef unsigned char uchar;
@@ -25,12 +26,13 @@ const int vis_width = 10;
 const int SCREEN_WIDTH = MINO_LEN*vis_width;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
-enum type {I, J, L, S, Z, O, T};
+// NONE specifies that a square is empty
+enum type {NONE, I, J, L, S, Z, O, T};
 
 // a piece is a type, a center of rotation, and 4 minoes
 struct piece
 {
-  char t;
+  enum type t;
   // center of rotation coords may be in-between minoes (for I and O)
   // hence c[2] coords are stored as double their actual value
   std::array<uchar, 2> c;
@@ -151,7 +153,7 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
 
   // convert bottom-left-based coords to top-left-based for graphics
   row = vis_height - row - 1;
-  printf("%d %d\n", row, col);
+  // printf("%d %d\n", row, col);
   
   SDL_Rect dest;
   dest.w = MINO_LEN;
@@ -159,7 +161,7 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
   dest.x = X+col * MINO_LEN;
   dest.y = Y+row * MINO_LEN;
 
-  printf("!!! %d %d\n", dest.x, dest.y);
+  // printf("!!! %d %d\n", dest.x, dest.y);
 
   SDL_BlitScaled(surf, NULL, gsurf, &dest);
 }
@@ -176,14 +178,76 @@ void drawpiece(struct piece p)
   }
 }
 
+// return false if out of bounds, or collides with existing mino
+bool goodcoords(int x, int y)
+{
+  if(x < 0 || y < 0 || x >= tot_width || y >= tot_height
+     || gboard[x][y] != NONE)
+  {
+    return false;
+  }
+
+  return true;
+}
+
+// move piece according to delta (do not draw)
+// if rep is true, move until it hits a barrier
+// returns false if failed to move piece at all
+bool movepiece(struct piece &p, int dx, int dy, bool rep)
+{
+  // delete piece from board (otherwise it will 'collide' with itself)
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = NONE;
+  }
+  
+  // make a copy of the coords
+  auto copy = p.p;
+
+  bool moved = false;
+  do
+  {
+    for(auto &m : copy) // update position of copy
+    {
+      printf("%d %d\n", m[0], m[1]);
+      m[0] += dx;
+      m[1] += dy;
+      printf("%d %d\n", m[0], m[1]);
+    }
+
+    for(auto &m : copy) // check for out of bounds/collisions
+    {
+      if(!goodcoords(m[0], m[1]))
+      {
+        goto stopmoving;
+      }
+    }
+
+    // if all coords valid, update piece
+    p.p = copy;
+    moved = true;
+
+  } while(rep);
+stopmoving:
+  
+  // update board
+  for(auto &m : p.p)
+  {
+    printf("%d %d\n", m[0], m[1]);
+    gboard[m[0]][m[1]] = p.t;
+  }
+
+  return moved;
+}
+
 // game is over if 
-int topout(struct piece p)
+bool topout(struct piece p)
 {
   // TODO check for exceeding buffer (only possible in competitive)
 
   for(auto m : p.p)
   {
-    if(gboard[m[0]][m[1]] != 0) // spawn mino collides with existing mino
+    if(gboard[m[0]][m[1]] != NONE) // spawn mino collides with existing mino
     {
       return 1;
     }
@@ -262,16 +326,10 @@ struct piece spawnpiece(enum type t)
   }
 
   // move piece down
-  // TODO
+  int stat = movepiece(p, 0, -1, false);
+  putd(stat);
 
   return p;
-}
-
-// move piece according to delta (do not draw)
-// if rep is true, move until it hits a barrier
-void movepiece(struct piece *p, int dx, int dy, bool rep)
-{
-  
 }
 
 int main(int argc, char **args)
