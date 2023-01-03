@@ -6,6 +6,7 @@
 #include <vector>
 #include <array>
 #include <time.h>
+#include <set>
 
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 #define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); close(); exit(1); } while(0)
@@ -57,11 +58,11 @@ struct piece
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::vector<SDL_Surface *> sprites(8);
+std::array<SDL_Surface *, 8> sprites;
 
 // graphical board top-left corner
-const int boardX = 0;
-const int boardY = 0;
+const int gX = 0;
+const int gY = 0;
 
 // spawn center for J, L, S, Z, T
 // remember coords are doubled
@@ -88,7 +89,7 @@ enum type gboard[tot_width][tot_height+1];
 // the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
 
 enum state {PLAYING, LOST};
-enum state gstate;
+enum state gstate = PLAYING;
 
 /* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
 void close()
@@ -123,7 +124,7 @@ SDL_Surface *loadBMP(const char *name)
   }
 
   SDL_FreeSurface( bmp );
-  sprites.push_back(opt);
+  // sprites.push_back(opt);
   return opt;
 }
 
@@ -149,7 +150,7 @@ void init(const char *title, int w, int h)
 }
 
 // given top-left corner of board, surface and coords on tetris board, scale and place mino (does not update surface)
-void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
+void blitmino(int X, int Y, enum type t, int col, int row)
 {
   // puts("hi");
   // printf("%d %d\n", col, row);
@@ -172,7 +173,17 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
 
   // printf("!!! %d %d\n", dest.x, dest.y);
 
-  SDL_BlitScaled(surf, NULL, gsurf, &dest);
+  SDL_BlitScaled(sprites[t], NULL, gsurf, &dest);
+}
+
+// after the initial covering of the board in NONE,
+// we can be efficient by only blitting things that have changed on gboard
+void reblitmino(int X, int Y, enum type t, int col, int row)
+{
+  if(gboard[col][row] != t)
+  {
+    blitmino(X, Y, t, col, row);
+  }
 }
 
 // given a piece, draw the parts of it that are on the visible play area
@@ -183,7 +194,7 @@ void drawpiece(struct piece &p)
   for(auto &m : p.p)
   {
     // puts("hey");
-    blitmino(boardX, boardY, sprites[p.t], m[0], m[1]);
+    reblitmino(gX, gY, p.t, m[0], m[1]);
   }
 }
 
@@ -191,7 +202,7 @@ void undrawpiece(struct piece &p)
 {
   for(auto &m : p.p)
   {
-    blitmino(boardX, boardY, sprites[NONE], m[0], m[1]);
+    reblitmino(gX, gY, NONE, m[0], m[1]);
   }
 }
 
@@ -373,6 +384,23 @@ bool topout(struct piece &p)
   return 0;
 }
 
+// run until told to quit by user, no other input is processed
+void lose()
+{
+  SDL_Event e;
+
+  while( SDL_PollEvent( &e ) != 0 )
+  {
+    //User requests quit
+    if( e.type == SDL_QUIT )
+    {
+      close();
+      fprintf(stderr, "quitting\n");
+      exit(0);
+    }
+  }
+}
+
 // spawn a piece above the playing field according to guideline
 // see https://tetris.fandom.com/wiki/SRS?file=SRS-pieces.png
 struct piece spawnpiece(enum type t)
@@ -476,15 +504,26 @@ bool grounded(struct piece &p)
   return g;
 }
 
+// whatever method (7-bag, etc.) selects the next piece
+struct piece pickpiece()
+{
+  // spawn new piece
+  static enum type pieces[] = {I, J, L, S, Z, O, T};
+  static int npieces = sizeof(pieces) / sizeof(*pieces);
+
+  struct piece p = spawnpiece(pieces[rand() % npieces]);
+  return p;
+}
+
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
-struct piece nextpiece(struct piece old)
+struct piece nextpiece(struct piece &old)
 {
   // TODO implement 7-bag
   // TODO check for tetrises, tspins, etc.
 
   // check for line clears
-  std::set<int, std::greater> rows; // rows to clear
+  std::set<int, std::greater<int>> rows; // rows to clear
   // std::greater puts the ints in descending order, which makes clearing the lines easire later
   for(auto &m : old.p) // loop through 4 minoes and check their rows
   {
@@ -508,29 +547,44 @@ struct piece nextpiece(struct piece old)
     }
   }
 
-  // execute the clears
+  // execute the clears & redraw
   // perhaps placing the column loop outside improves locality of reference
   for(int i = 0; i < tot_width; i++)
   {
+    // clear this column
     // this isn't the most efficient way to clear multiple lines at a time but it shouldn't be a big deal
     for(int r : rows) // iterate in descending order (thanks to std::greater)
     {
       // gboard contains an extra row at the very top so this works
-      memmove(gboard[i][r], gboard[i][r+1], sizeof(**gboard) * (tot_height - r));
+      memmove(&gboard[i][r], &gboard[i][r+1], sizeof(**gboard) * (tot_height - r));
+    }
+
+    // redraw column
+    for(int j = 0; j < tot_height; j++)
+    {
+      reblitmino(gX, gY, gboard[i][j], i, j);
     }
   }
 
-  // redraw everything relevant
-  
-  // spawn new piece
-  static enum type pieces[] = {I, J, L, S, Z, O, T};
-  static int npieces = sizeof(pieces) / sizeof(*pieces);
-
-  struct piece p = spawnpiece(pieces[rand() % npieces]);
+  // pick next piece, draw, and return
+  struct piece p = pickpiece();
   drawpiece(p);
-
+  
   return p;
 }
+
+// // at start of game, no old piece, so this version does not do any clears
+// struct piece nextpiece()
+// {
+//   puts("hi");
+//   // pick next piece, draw, and return
+//   struct piece p = pickpiece();
+//   drawpiece(p);
+
+//   printf("%d\n", p.t);
+  
+//   return p;
+// }
 
 int main(int argc, char **args)
 {
@@ -561,20 +615,18 @@ int main(int argc, char **args)
   {
     for(int j = 0; j < 20; j++)
     {
-      blitmino(0, 0, bgspr, i, j);
+      blitmino(0, 0, NONE, i, j);
     }
   }
 
   // init RNG
   srand(time(NULL));
 
-  // get random piece
+  // get random piece to start & update
   // TODO replace with 7-bag
   // struct piece p = spawnpiece(pieces[rand() % npieces]);
-  struct piece p = spawnnext();
-  drawpiece(p);
+  struct piece p = pickpiece();
 
-  //Update the surface
   SDL_UpdateWindowSurface( gwin );
 
   // gravity
@@ -626,7 +678,7 @@ int main(int argc, char **args)
       if(curtime - lastreset >= lockdelay)
       {
         // spawn new piece, reset variables, and continue
-        p = nextpiece();
+        p = nextpiece(p);
         SDL_UpdateWindowSurface(gwin);
 
         locking = false;
@@ -699,7 +751,6 @@ int main(int argc, char **args)
   }
 
   close();
-
   return 0;
 }
 
