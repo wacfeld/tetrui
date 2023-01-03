@@ -19,7 +19,7 @@ const int MINO_LEN = 32;
 // total (including buffer) and visible dimensions of board
 const int tot_height = 40;
 const int tot_width = 10;
-const int vis_height = 23;
+const int vis_height = 20;
 const int vis_width = 10;
 
 // board is 10x20
@@ -171,7 +171,7 @@ void blitmino(int X, int Y, SDL_Surface *surf, int col, int row)
 // (don't update screen)
 void drawpiece(struct piece p)
 {
-  for(auto m : p.p)
+  for(auto &m : p.p)
   {
     // puts("hey");
     blitmino(boardX, boardY, sprites[p.t], m[0], m[1]);
@@ -209,10 +209,10 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
   {
     for(auto &m : copy) // update position of copy
     {
-      printf("%d %d\n", m[0], m[1]);
+      // printf("%d %d\n", m[0], m[1]);
       m[0] += dx;
       m[1] += dy;
-      printf("%d %d\n", m[0], m[1]);
+      // printf("%d %d\n", m[0], m[1]);
     }
 
     for(auto &m : copy) // check for out of bounds/collisions
@@ -233,7 +233,7 @@ stopmoving:
   // update board
   for(auto &m : p.p)
   {
-    printf("%d %d\n", m[0], m[1]);
+    // printf("%d %d\n", m[0], m[1]);
     gboard[m[0]][m[1]] = p.t;
   }
 
@@ -245,7 +245,7 @@ bool topout(struct piece p)
 {
   // TODO check for exceeding buffer (only possible in competitive)
 
-  for(auto m : p.p)
+  for(auto &m : p.p)
   {
     if(gboard[m[0]][m[1]] != NONE) // spawn mino collides with existing mino
     {
@@ -320,14 +320,13 @@ struct piece spawnpiece(enum type t)
   
 
   // write piece onto board
-  for(auto m : p.p)
+  for(auto &m : p.p)
   {
     gboard[m[0]][m[1]] = t;
   }
 
   // move piece down
-  int stat = movepiece(p, 0, -1, false);
-  putd(stat);
+  movepiece(p, 0, -1, false);
 
   return p;
 }
@@ -365,8 +364,39 @@ int main(int argc, char **args)
     }
   }
 
-  struct piece p = spawnpiece(I);
+  struct piece p,q,r,s,t,u,v;
+  p = spawnpiece(I);
+  movepiece(p, 0, -1, 1);
   drawpiece(p);
+
+  q = spawnpiece(T);
+  movepiece(q, 0, -1, 1);
+  drawpiece(q);
+
+  r = spawnpiece(O);
+  movepiece(r, 0, -1, 1);
+  drawpiece(r);
+
+  s = spawnpiece(S);
+  movepiece(s, 0, -1, 1);
+  drawpiece(s);
+
+  t = spawnpiece(Z);
+  movepiece(t, 0, -1, 1);
+  drawpiece(t);
+
+  u = spawnpiece(J);
+  movepiece(u, 0, -1, 1);
+  drawpiece(u);
+
+  v = spawnpiece(L);
+  movepiece(v, 0, -1, 1);
+  drawpiece(v);
+
+  
+
+  //Update the surface
+  SDL_UpdateWindowSurface( gwin );
 
   // blitmino(0, 0, ispr, 1, 1);
   // blitmino(0, 0, tspr, 9, 19);
@@ -384,8 +414,6 @@ int main(int argc, char **args)
 
   /* SDL_BlitSurface( hey, NULL, ws.surf, NULL ); */
 
-  //Update the surface
-  SDL_UpdateWindowSurface( gwin );
 
   bool quit = false;
   SDL_Event e;
