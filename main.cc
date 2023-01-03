@@ -87,9 +87,17 @@ const int gY = 0;
 enum type gboard[tot_width][tot_height+1];
 // guideline: there is a 10x20 buffer area above visible play area
 // the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
+bool gchanged[tot_width][tot_height]; // keeps track of which things need changing
 
 enum state {PLAYING, LOST};
 enum state gstate = PLAYING;
+
+// update both gboard and gchanged
+void changeboard(int x, int y, enum type t)
+{
+  gboard[x][y] = t;
+  gchanged[x][y] = 1;
+}
 
 /* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
 void close()
@@ -180,10 +188,12 @@ void blitmino(int X, int Y, enum type t, int col, int row)
 // we can be efficient by only blitting things that have changed on gboard
 void reblitmino(int X, int Y, enum type t, int col, int row)
 {
-  if(gboard[col][row] != t)
+  // if(gboard[col][row] != t)
   {
     blitmino(X, Y, t, col, row);
   }
+
+  // changed[col][row] = 0;
 }
 
 // given a piece, draw the parts of it that are on the visible play area
@@ -228,7 +238,8 @@ bool rotatepiece(struct piece &p, enum rot r)
   // delete piece from board
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    // gboard[m[0]][m[1]] = NONE;
+    changeboard(m[0], m[1], NONE);
   }
 
   // copy the coords and double them to match up with center
@@ -297,7 +308,8 @@ bool rotatepiece(struct piece &p, enum rot r)
   p.p = cp;
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = p.t;
+    // gboard[m[0]][m[1]] = p.t;
+    changeboard(m[0], m[1], p.t);
   }
 
   // redraw piece
@@ -314,7 +326,8 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
   // delete piece from board (otherwise it will 'collide' with itself)
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    // gboard[m[0]][m[1]] = NONE;
+    changeboard(m[0], m[1], NONE);
   }
 
   // make a copy of the coords & center
@@ -358,6 +371,7 @@ stopmoving:
   {
     // printf("%d %d\n", m[0], m[1]);
     gboard[m[0]][m[1]] = p.t;
+    changeboard(m[0], m[1], p.t);
   }
 
   if(moved)
@@ -466,7 +480,8 @@ struct piece spawnpiece(enum type t)
   // write piece onto board
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = t;
+    // gboard[m[0]][m[1]] = t;
+    changeboard(m[0], m[1], t);
   }
 
   // move piece down
@@ -481,7 +496,8 @@ bool grounded(struct piece &p)
   // delete piece from board temporarily
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    // gboard[m[0]][m[1]] = NONE;
+    changeboard(m[0], m[1], NONE);
   }
 
   bool g = false;
@@ -498,7 +514,9 @@ bool grounded(struct piece &p)
   // reinstate piece
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = p.t;
+    // gboard[m[0]][m[1]] = p.t;
+    changeboard(m[0], m[1], p.t);
+    
   }
 
   return g;
@@ -562,6 +580,7 @@ struct piece nextpiece(struct piece &old)
     // redraw column
     for(int j = 0; j < tot_height; j++)
     {
+      gchanged[i][j] = 1;
       reblitmino(gX, gY, gboard[i][j], i, j);
     }
   }
