@@ -313,7 +313,7 @@ bool goodcoords(int x, int y)
 // assumes n >= 1
 const char *suffix(unsigned long long n)
 {
-  if(n % 100 == 11 || n % 100 == 12 || n % 12 == 13)
+  if(n % 100 == 11 || n % 100 == 12 || n % 100 == 13)
     return "th";
   if(n % 10 == 1)
     return "st";
@@ -460,7 +460,7 @@ bool srs(struct piece &p, enum rot r)
     for(auto &m : cp)
     {
       // if(gboard[m[0]+off[0]][m[1]+off[1]] != NONE)
-      if(goodcoords(m[0]+off[0], m[1]+off[1]))
+      if(!goodcoords(m[0]+off[0], m[1]+off[1]))
       {
         collides = true;
       }
@@ -496,7 +496,7 @@ bool srs(struct piece &p, enum rot r)
 // (rotating O returns true always)
 bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enum rot r))
 {
-  printf("attempting to rotate %d\n", r);
+  // printf("attempting to rotate %d\n", r);
   // delete piece from board
   for(auto &m : p.p)
   {
@@ -510,7 +510,7 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
   // attempt to rotate
   bool rotated = rmeth(p, r);
 
-  putd(rotated);
+  // putd(rotated);
 
   if(rotated)
   {
@@ -1060,12 +1060,14 @@ int main(int argc, char **args)
   uint lastgrav = 0; // ms since last gravity tick
   uint gravdelay = 1000; // ms between gravity ticks
   uint curtime = 0; // current time in ms
+  bool dograv = true;
 
   // lock down
   // int movecount = 0;
   uint lockdelay = 500; // ms before piece locks
   uint lastreset = 0; // when locktimer >= lockdelay, piece locks
   bool locking = false; // becomes true whenever piece is touching the ground
+  bool doground = true;
 
   bool quit = false;
   SDL_Event e;
@@ -1076,7 +1078,7 @@ int main(int argc, char **args)
     curtime = SDL_GetTicks();
 
     // check gravity timing
-    if(curtime - lastgrav >= gravdelay)
+    if(curtime - lastgrav >= gravdelay && dograv)
     {
       // update timer
       lastgrav = curtime;
@@ -1089,7 +1091,7 @@ int main(int argc, char **args)
     }
 
     // if touching the ground, check for lockdown
-    if(grounded(p))
+    if(grounded(p) && doground)
     {
       // currently infinity
       // TODO change to move reset
