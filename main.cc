@@ -728,9 +728,27 @@ enum type fullrand()
   return pieces[rand() % npieces];
 }
 
+// return next piece from gqueue, shift queue forward
+enum type queuenext(enum type (*qmeth)(void))
+{
+  // grab next piece type
+  enum type next = gqueue[0];
+
+  // shift rest of queue forward
+  for(int i = 0; i < queue_len - 1; i++)
+  {
+    gqueue[i] = gqueue[i+1];
+  }
+
+  // put new piece at back of queue using given method
+  gqueue[queue_len - 1] = qmeth();
+
+  return next;
+}
+
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
-struct piece nextpiece(struct piece &old)
+struct piece nextpiece(struct piece &old, enum type (*qmeth)(void))
 {
   // TODO check for tetrises, tspins, etc.
 
@@ -779,11 +797,12 @@ struct piece nextpiece(struct piece &old)
     }
   }
 
-  // pick next piece, draw, and return
-  // struct piece p = pickpiece();
-  enum type t = bag7();
+  // get next piece, spawn, draw, draw queue, and return
+  enum type t = queuenext(qmeth);
   struct piece p = spawnpiece(t);
+  
   drawpiece(p);
+  drawqueue();
   
   return p;
 }
@@ -862,22 +881,23 @@ int main(int argc, char **args)
   // init RNG
   srand(time(NULL));
 
+  enum type (*qmeth)(void) = bag7;
 
-  // get random piece to start & update
-  // TODO replace with 7-bag
-  // struct piece p = spawnpiece(pieces[rand() % npieces]);
-  // struct piece p = pickpiece();
-  enum type t = bag7();
-  struct piece p = spawnpiece(t);
-  drawpiece(p);
-
+  // fill & draw the queue
   for(int i = 0; i < queue_len; i++)
   {
-    t = pickpiece();
-    queuepiece(i, t);
+    gqueue[i] = qmeth();
   }
 
+  // grab first piece from queue, draw everything
+  enum type t = queuenext(qmeth);
+  struct piece p = spawnpiece(t);
+  drawpiece(p);
+  drawqueue();
+
   SDL_UpdateWindowSurface( gwin );
+
+  // start the game
 
   // gravity
   uint lastgrav = 0; // ms since last gravity tick
@@ -928,7 +948,7 @@ int main(int argc, char **args)
       if(curtime - lastreset >= lockdelay)
       {
         // spawn new piece, reset variables, and continue
-        p = nextpiece(p);
+        p = nextpiece(p, qmeth);
         SDL_UpdateWindowSurface(gwin);
 
         locking = false;
