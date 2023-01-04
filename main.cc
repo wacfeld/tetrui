@@ -656,14 +656,53 @@ bool grounded(struct piece &p)
   return g;
 }
 
+// used to shuffle bags
+void swap(enum type &a, enum type &b)
+{
+  enum type temp = a;
+  a = b;
+  b = temp;
+}
+
+// get a single piece type using the 7-bag method
+// uses static variables to maintain state
+enum type bag7()
+{
+  static enum type bag[7];
+  static int siz = 0;
+
+  // bag is empty
+  if(siz == 0)
+  {
+    // fill with 1 of each piece
+    bag[siz++] = I;
+    bag[siz++] = J;
+    bag[siz++] = L;
+    bag[siz++] = S;
+    bag[siz++] = Z;
+    bag[siz++] = T;
+    bag[siz++] = O;
+
+    // shuffle
+    for(int i = 0; i < 100; i++)
+    {
+      int j = rand() % 7;
+      int k = rand() % 7;
+      
+    }
+  }
+
+}
+
 // whatever method (7-bag, etc.) selects the next piece
 enum type pickpiece()
 {
-  // spawn new piece
-  static enum type pieces[] = {I, J, L, S, Z, O, T};
-  static int npieces = sizeof(pieces) / sizeof(*pieces);
+  // most primitive method (randomly select pieces independently)
+  // // available pieces
+  // static const enum type pieces[] = {I, J, L, S, Z, O, T};
+  // static const int npieces = sizeof(pieces) / sizeof(*pieces);
+  // return pieces[rand() % npieces];
 
-  return pieces[rand() % npieces];
   // struct piece p = spawnpiece(pieces[rand() % npieces]);
   // return p;
 }
@@ -672,7 +711,6 @@ enum type pickpiece()
 // spawn next piece (using whatever selection process) and draw
 struct piece nextpiece(struct piece &old)
 {
-  // TODO implement 7-bag
   // TODO check for tetrises, tspins, etc.
 
   // check for line clears
