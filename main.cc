@@ -65,6 +65,8 @@ const int queue_width = 6; // number of minoes
 const int queue_height = vis_height;
 const int qX = MINO_LEN * vis_width;
 const int qY = 0;
+const int queue_len = 5; // number of pieces to display
+const int queue_diff = 3; // number of minoes between pieces in hold
 
 // board is 10x20
 const int SCREEN_WIDTH = MINO_LEN*vis_width + queue_width * MINO_LEN;
@@ -77,17 +79,21 @@ const int CENT[] = {2, 0};
 
 // spawn center for O
 // (4.5, 20.5) doubled
-const int OCENT[] = {1, 1};
+const int OCENT[] = {3, 1};
 
 // spawn center for I
 // (4.5, 19.5) doubled
-const int ICENT[] = {1, -1};
+const int ICENT[] = {3, -1};
 
 // pieces spawn in some or all of columns 4, 5, 6, 7 (rounded left)
 // and rows 21, 22 (rounded down)
 // this is the bottom-left corner of that box
-#define SY 20
 #define SX 3
+#define SY 20
+
+// bottom-left corner of top queue piece
+#define QX 1
+#define QY 17
 
 // #define SY1 (SY0+1)
 // #define SX1 (SX0+1)
@@ -111,7 +117,7 @@ enum type gboard[tot_width][tot_height+1];
 // the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
 
 // gscreen is kept synchronized with physical screen
-// reblitmino() consults this to see what needs updating
+// reboardmino() consults this to see what needs updating
 enum type gscreen[tot_width][tot_height];
 
 // bool gchanged[tot_width][tot_height]; // keeps track of which things need changing
@@ -184,8 +190,23 @@ void init(const char *title, int w, int h)
   }
 }
 
-// given top-left corner of board, surface and coords on tetris board, scale and place mino (does not update surface)
+// scale and place mino
+// origin is top-left
 void blitmino(int X, int Y, enum type t, int col, int row)
+{
+  SDL_Rect dest;
+  dest.w = MINO_LEN;
+  dest.h = MINO_LEN;
+  dest.x = X+col * MINO_LEN;
+  dest.y = Y+row * MINO_LEN;
+
+  // printf("!!! %d %d\n", dest.x, dest.y);
+  SDL_BlitScaled(sprites[t], NULL, gsurf, &dest);
+}
+
+// given top-left corner of board, surface and coords on tetris board, draw mino
+// origin is top-right
+void boardmino(int X, int Y, enum type t, int col, int row)
 {
   // puts("hi");
   // printf("%d %d\n", col, row);
@@ -200,29 +221,22 @@ void blitmino(int X, int Y, enum type t, int col, int row)
   int srow = vis_height - row - 1;
   // printf("%d %d\n", srow, col);
 
-  SDL_Rect dest;
-  dest.w = MINO_LEN;
-  dest.h = MINO_LEN;
-  dest.x = X+col * MINO_LEN;
-  dest.y = Y+srow * MINO_LEN;
-
-  // printf("!!! %d %d\n", dest.x, dest.y);
+  blitmino(X, Y, t, col, srow);
 
   // update gscreen alongside actual screen
   gscreen[col][row] = t;
-  SDL_BlitScaled(sprites[t], NULL, gsurf, &dest);
 }
 
 // after the initial covering of the board in NONE,
 // we can be efficient by only blitting things that have changed on gboard
-void reblitmino(int X, int Y, enum type t, int col, int row)
+void reboardmino(int X, int Y, enum type t, int col, int row)
 {
   // only blit if contents of cell have changed
   // useful for being efficient during line clears
   if(gscreen[col][row] != gboard[col][row])
   {
     // puts("blitting");
-    blitmino(X, Y, t, col, row);
+    boardmino(X, Y, t, col, row);
   }
   else
   {
@@ -240,7 +254,7 @@ void drawpiece(struct piece &p)
   for(auto &m : p.p)
   {
     // puts("hey");
-    reblitmino(bX, bY, p.t, m[0], m[1]);
+    reboardmino(bX, bY, p.t, m[0], m[1]);
   }
 }
 
@@ -248,7 +262,7 @@ void undrawpiece(struct piece &p)
 {
   for(auto &m : p.p)
   {
-    reblitmino(bX, bY, NONE, m[0], m[1]);
+    reboardmino(bX, bY, NONE, m[0], m[1]);
   }
 }
 
@@ -541,7 +555,6 @@ struct piece spawnpiece(enum type t)
     // return p;
   }
 
-
   // write piece onto board
   for(auto &m : p.p)
   {
@@ -646,7 +659,7 @@ struct piece nextpiece(struct piece &old)
     for(int j = 0; j < tot_height; j++)
     {
       // gchanged[i][j] = 1;
-      reblitmino(bX, bY, gboard[i][j], i, j);
+      reboardmino(bX, bY, gboard[i][j], i, j);
     }
   }
 
@@ -702,7 +715,7 @@ void initscreen()
   {
     for(int j = 0; j < 20; j++)
     {
-      blitmino(bX, bY, NONE, i, j);
+      boardmino(bX, bY, NONE, i, j);
     }
   }
 
@@ -711,7 +724,7 @@ void initscreen()
   {
     for(int j = 0; j < queue_height; j++)
     {
-      blitmino(qX, qY, QBG, i, j);
+      boardmino(qX, qY, QBG, i, j);
     }
   }
 }
