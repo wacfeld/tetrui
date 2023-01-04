@@ -311,7 +311,7 @@ bool goodcoords(int x, int y)
 }
 
 // assumes n >= 1
-const char *suffix(int n)
+const char *suffix(unsigned long long n)
 {
   if(n % 100 == 11 || n % 100 == 12 || n % 12 == 13)
     return "th";
@@ -377,8 +377,7 @@ bool srs(struct piece &p, enum rot r)
     m[1] /= 2;
   }
 
-  // try each of the 5 offsets (including (0,0)) one at a time
-
+  // decide on kick table
   std::array<std::array<int, 2>, 5> kt;
 
   // JLSTZ kick table
@@ -443,8 +442,38 @@ bool srs(struct piece &p, enum rot r)
     static unsigned long long ORC = 0;
     ORC++;
     fprintf(stderr, "why are you rotating an O piece? this is the %Lu%s time you've done this\n", ORC, suffix(ORC));
+    return true;
   }
 
+  // try each of the 5 offsets (including (0,0)) one at a time
+  for(auto off : kt)
+  {
+    // does it collide?
+    bool collides = false;
+    for(auto &m : p.p)
+    {
+      if(gboard[m[0]+off[0]][m[1]+off[1]] != NONE)
+      {
+        collides = true;
+      }
+    }
+
+    // if not, then that's the one
+    if(!collides)
+    {
+      // apply offset & return
+      for(auto &m : p.p)
+      {
+        m[0] += off[0];
+        m[1] += off[1];
+      }
+
+      return true;
+    }
+  }
+
+  // all of them collided; return failure
+  return false;
 }
 
 // rotate piece
