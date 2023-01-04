@@ -450,7 +450,7 @@ bool srs(struct piece &p, enum rot r)
   {
     // does it collide?
     bool collides = false;
-    for(auto &m : p.p)
+    for(auto &m : cp)
     {
       if(gboard[m[0]+off[0]][m[1]+off[1]] != NONE)
       {
@@ -461,12 +461,14 @@ bool srs(struct piece &p, enum rot r)
     // if not, then that's the one
     if(!collides)
     {
-      // apply offset & return
-      for(auto &m : p.p)
+      // apply offset, write back, return
+      for(auto &m : cp)
       {
         m[0] += off[0];
         m[1] += off[1];
       }
+
+      p.p = cp;
 
       return true;
     }
