@@ -33,6 +33,9 @@ const int vis_width = 10;
 // rotation directions
 enum rot {CW, FLIP, CCW}; // FLIP means 180
 
+// rotation states that a piece can be in
+enum rotstate {ZERO, RIGHT, LEFT, TWO};
+
 // NONE specifies that a square is empty
 enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8};
 
@@ -40,6 +43,7 @@ enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8};
 struct piece
 {
   enum type t;
+  enum rotstate r;
   // center of rotation coords may be in-between minoes (for I and O)
   // hence c[2] coords are stored as double their actual value
   std::array<int, 2> c;
@@ -306,11 +310,125 @@ bool goodcoords(int x, int y)
   return true;
 }
 
+// assumes n >= 1
+const char *suffix(int n)
+{
+  if(n % 100 == 11 || n % 100 == 12 || n % 12 == 13)
+    return "th";
+  if(n % 10 == 1)
+    return "st";
+  if(n % 10 == 2)
+    return "nd";
+  if(n % 10 == 3)
+    return "rd";
+  else
+    return "th";
+}
+
+// super rotation system
+// rotates around center, then tries certain hardcoded offsets before giving up
+bool srs(struct piece &p, enum rot r)
+{
+  // copy the coords and double them to match up with center
+  auto cp = p.p;
+  for(auto &m : cp)
+  {
+    m[0] *= 2;
+    m[1] *= 2;
+  }
+
+  // grab center coords
+  int cx = p.c[0];
+  int cy = p.c[1];
+
+  // rotate all minos around the center and halve again
+  for(auto &m : cp)
+  {
+    // diff := mino - center
+    int dx = m[0] - cx;
+    int dy = m[1] - cy;
+
+    // rotate difference vector
+    if(r == CCW) // swap then negate x coord
+    {
+      int temp = dx;
+      dx = -dy;
+      dy = temp;
+    }
+    if(r == CW) // swap then negate y coord
+    {
+      int temp = dy;
+      dy = -dx;
+      dx = temp;
+    }
+    if(r == FLIP) // negate both coords
+    {
+      // puts("flipping");
+      dy = -dy;
+      dx = -dx;
+    }
+
+    // mino := center + newdiff
+    m[0] = cx + dx;
+    m[1] = cy + dy;
+
+    // halve coords
+    m[0] /= 2;
+    m[1] /= 2;
+  }
+
+  // try each of the 5 offsets (including (0,0)) one at a time
+
+  std::array<std::array<int, 2>, 5> kt;
+
+  // JLSTZ kick table
+  if(p.t == J || p.t == L || p.t == S || p.t == Z || p.t == T)
+  {
+    if(p.r == ZERO && r == CW) // 0->R
+      kt = {{{0,0}, {-1,0}, {-1,1}, {0,-2}, {-1,-2}}};
+
+    if(p.r == RIGHT && r == CCW) // R->0
+      kt = {{{0,0}, {1,0}, {1,-1}, {0,2}, {1,2}}};
+
+    if(p.r == RIGHT && r == CW) // R->2
+      kt = {{{0,0}, {1,0}, {1,-1}, {0,2}, {1,2}}};
+
+    if(p.r == TWO && r == CCW) // 2->R
+      kt = {{{0,0}, {-1,0}, {-1,1}, {0,-2}, {-1,-2}}};
+
+    if(p.r == TWO && r == CW) // 2->L
+      kt = {{{0,0}, {1,0}, {1,1}, {0,-2}, {1,-2}}};
+
+    if(p.r == LEFT && r == CCW) // L->2
+      kt = {{{0,0}, {-1,0}, {-1,-1}, {0,2}, {-1,2}}};
+
+    if(p.r == LEFT && r == CW) // L->0
+      kt = {{{0,0}, {-1,0}, {-1,-1}, {0,2}, {-1,2}}};
+
+    if(p.r == ZERO && r == CCW) // 0->L
+      kt = {{{0,0}, {1,0}, {1,1}, {0,-2}, {1,-2}}};
+  }
+
+  // I kick table
+  else if(p.t == I)
+  {
+    
+  }
+
+  // O has no kick table
+  else
+  {
+    static unsigned long long ORC = 0;
+    ORC++;
+    fprintf(stderr, "why are you rotating an O piece? this is the %Lu%s time you've done this\n", ORC, suffix(ORC));
+  }
+
+}
+
 // rotate piece
-// TODO: kicks, etc.
-// currently only rotates around center
-// returns true if successfully rotated (rotating O always returns true)
-bool rotatepiece(struct piece &p, enum rot r)
+// rmeth (e.x. SRS) attempts to rotate the piece and returns true on success
+// (rotating O returns true always)
+bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enum rot r))
 {
   // delete piece from board
   for(auto &m : p.p)
@@ -367,6 +485,8 @@ bool rotatepiece(struct piece &p, enum rot r)
     m[1] /= 2;
   }
 
+  // TODO update rotstate
+  
   // check for collisions/out of bounds
   for(auto &m : cp)
   {
@@ -481,6 +601,8 @@ bool topout(struct piece &p)
 // run until told to quit by user, no other input is processed
 void lose()
 {
+  fprintf(stderr, "lost\n");
+
   SDL_Event e;
 
   while(1)
@@ -502,6 +624,7 @@ void lose()
 struct piece placepiece(int x, int y, enum type t)
 {
   struct piece p;
+  p.r = ZERO; // initially no rotation
   p.t = t;
 
   // spawn on 21st row (0-indexed)
@@ -576,7 +699,6 @@ struct piece placepiece(int x, int y, enum type t)
 // see https://tetris.fandom.com/wiki/SRS?file=SRS-pieces.png
 struct piece spawnpiece(enum type t)
 {
-
   struct piece p = placepiece(SX, SY, t);
 
   // process garbage
@@ -998,15 +1120,15 @@ int main(int argc, char **args)
         // rotation (currently dvorak keyboard)
         else if(sym == SDLK_a) // CCW
         {
-          moved = rotatepiece(p, CCW);
+          moved = rotatepiece(p, CCW, srs);
         }
         else if(sym == SDLK_o) // 180
         {
-          moved = rotatepiece(p, FLIP);
+          moved = rotatepiece(p, FLIP, srs);
         }
         else if(sym == SDLK_e) // CW
         {
-          moved = rotatepiece(p, CW);
+          moved = rotatepiece(p, CW, srs);
         }
 
         // reset lock timer
