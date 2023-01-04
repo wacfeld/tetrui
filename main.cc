@@ -28,15 +28,11 @@ const int vis_height = 20;
 
 const int vis_width = 10;
 
-// board is 10x20
-const int SCREEN_WIDTH = MINO_LEN*vis_width;
-const int SCREEN_HEIGHT = MINO_LEN*vis_height;
-
 // rotation directions
 enum rot {CW, FLIP, CCW}; // FLIP means 180
 
 // NONE specifies that a square is empty
-enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7};
+enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8};
 
 // a piece is a type, a center of rotation, and 4 minoes
 struct piece
@@ -58,11 +54,21 @@ struct piece
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::array<SDL_Surface *, 8> sprites;
+std::array<SDL_Surface *, 9> sprites;
 
 // graphical board top-left corner
-const int gX = 0;
-const int gY = 0;
+const int bX = 0;
+const int bY = 0;
+
+// queue (to the right of board)
+const int queue_width = 6; // number of minoes
+const int queue_height = vis_height;
+const int qX = MINO_LEN * vis_width;
+const int qY = 0;
+
+// board is 10x20
+const int SCREEN_WIDTH = MINO_LEN*vis_width + queue_width * MINO_LEN;
+const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
 // spawn center for J, L, S, Z, T
 // remember coords are doubled
@@ -82,22 +88,30 @@ const int gY = 0;
 #define SX2 (SX0+2)
 #define SX3 (SX0+3)
 
+// shapes in terms of offsets
+#define ISHAPE
+
 // 0 = empty
 // L, J, S, Z, I, O, T = respective colored mino
 enum type gboard[tot_width][tot_height+1];
 // guideline: there is a 10x20 buffer area above visible play area
 // the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
-bool gchanged[tot_width][tot_height]; // keeps track of which things need changing
+
+// gscreen is kept synchronized with physical screen
+// reblitmino() consults this to see what needs updating
+enum type gscreen[tot_width][tot_height];
+
+// bool gchanged[tot_width][tot_height]; // keeps track of which things need changing
 
 enum state {PLAYING, LOST};
 enum state gstate = PLAYING;
 
-// update both gboard and gchanged
-void changeboard(int x, int y, enum type t)
-{
-  gboard[x][y] = t;
-  gchanged[x][y] = 1;
-}
+// // update both gboard and gchanged
+// void changeboard(int x, int y, enum type t)
+// {
+//   gboard[x][y] = t;
+//   gchanged[x][y] = 1;
+// }
 
 /* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
 void close()
@@ -165,22 +179,24 @@ void blitmino(int X, int Y, enum type t, int col, int row)
   // check bounds
   if(row >= vis_height || col >= vis_width || row < 0 || col < 0)
   {
-    fprintf(stderr, "out of bounds: %d %d\n", row, col);
+    // fprintf(stderr, "out of bounds: %d %d\n", row, col);
     return;
   }
 
   // convert bottom-left-based coords to top-left-based for graphics
-  row = vis_height - row - 1;
-  // printf("%d %d\n", row, col);
+  int srow = vis_height - row - 1;
+  // printf("%d %d\n", srow, col);
 
   SDL_Rect dest;
   dest.w = MINO_LEN;
   dest.h = MINO_LEN;
   dest.x = X+col * MINO_LEN;
-  dest.y = Y+row * MINO_LEN;
+  dest.y = Y+srow * MINO_LEN;
 
   // printf("!!! %d %d\n", dest.x, dest.y);
 
+  // update gscreen alongside actual screen
+  gscreen[col][row] = t;
   SDL_BlitScaled(sprites[t], NULL, gsurf, &dest);
 }
 
@@ -188,9 +204,16 @@ void blitmino(int X, int Y, enum type t, int col, int row)
 // we can be efficient by only blitting things that have changed on gboard
 void reblitmino(int X, int Y, enum type t, int col, int row)
 {
-  // if(gboard[col][row] != t)
+  // only blit if contents of cell have changed
+  // useful for being efficient during line clears
+  if(gscreen[col][row] != gboard[col][row])
   {
+    // puts("blitting");
     blitmino(X, Y, t, col, row);
+  }
+  else
+  {
+    // puts("skipping blit");
   }
 
   // changed[col][row] = 0;
@@ -204,7 +227,7 @@ void drawpiece(struct piece &p)
   for(auto &m : p.p)
   {
     // puts("hey");
-    reblitmino(gX, gY, p.t, m[0], m[1]);
+    reblitmino(bX, bY, p.t, m[0], m[1]);
   }
 }
 
@@ -212,7 +235,7 @@ void undrawpiece(struct piece &p)
 {
   for(auto &m : p.p)
   {
-    reblitmino(gX, gY, NONE, m[0], m[1]);
+    reblitmino(bX, bY, NONE, m[0], m[1]);
   }
 }
 
@@ -238,8 +261,8 @@ bool rotatepiece(struct piece &p, enum rot r)
   // delete piece from board
   for(auto &m : p.p)
   {
-    // gboard[m[0]][m[1]] = NONE;
-    changeboard(m[0], m[1], NONE);
+    gboard[m[0]][m[1]] = NONE;
+    // changeboard(m[0], m[1], NONE);
   }
 
   // copy the coords and double them to match up with center
@@ -308,8 +331,8 @@ bool rotatepiece(struct piece &p, enum rot r)
   p.p = cp;
   for(auto &m : p.p)
   {
-    // gboard[m[0]][m[1]] = p.t;
-    changeboard(m[0], m[1], p.t);
+    gboard[m[0]][m[1]] = p.t;
+    // changeboard(m[0], m[1], p.t);
   }
 
   // redraw piece
@@ -326,8 +349,8 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
   // delete piece from board (otherwise it will 'collide' with itself)
   for(auto &m : p.p)
   {
-    // gboard[m[0]][m[1]] = NONE;
-    changeboard(m[0], m[1], NONE);
+    gboard[m[0]][m[1]] = NONE;
+    // changeboard(m[0], m[1], NONE);
   }
 
   // make a copy of the coords & center
@@ -371,7 +394,7 @@ stopmoving:
   {
     // printf("%d %d\n", m[0], m[1]);
     gboard[m[0]][m[1]] = p.t;
-    changeboard(m[0], m[1], p.t);
+    // changeboard(m[0], m[1], p.t);
   }
 
   if(moved)
@@ -480,8 +503,8 @@ struct piece spawnpiece(enum type t)
   // write piece onto board
   for(auto &m : p.p)
   {
-    // gboard[m[0]][m[1]] = t;
-    changeboard(m[0], m[1], t);
+    gboard[m[0]][m[1]] = t;
+    // changeboard(m[0], m[1], t);
   }
 
   // move piece down
@@ -496,8 +519,8 @@ bool grounded(struct piece &p)
   // delete piece from board temporarily
   for(auto &m : p.p)
   {
-    // gboard[m[0]][m[1]] = NONE;
-    changeboard(m[0], m[1], NONE);
+    gboard[m[0]][m[1]] = NONE;
+    // changeboard(m[0], m[1], NONE);
   }
 
   bool g = false;
@@ -514,8 +537,8 @@ bool grounded(struct piece &p)
   // reinstate piece
   for(auto &m : p.p)
   {
-    // gboard[m[0]][m[1]] = p.t;
-    changeboard(m[0], m[1], p.t);
+    gboard[m[0]][m[1]] = p.t;
+    // changeboard(m[0], m[1], p.t);
     
   }
 
@@ -580,8 +603,8 @@ struct piece nextpiece(struct piece &old)
     // redraw column
     for(int j = 0; j < tot_height; j++)
     {
-      gchanged[i][j] = 1;
-      reblitmino(gX, gY, gboard[i][j], i, j);
+      // gchanged[i][j] = 1;
+      reblitmino(bX, bY, gboard[i][j], i, j);
     }
   }
 
@@ -605,12 +628,8 @@ struct piece nextpiece(struct piece &old)
 //   return p;
 // }
 
-int main(int argc, char **args)
+void initsprites()
 {
-  // initialize window
-  init("test", SCREEN_WIDTH, SCREEN_HEIGHT);
-  SDL_FillRect( gsurf, NULL, SDL_MapRGB( gsurf->format, 0xFF, 0xFF, 0xFF ) );
-
   // load sprites
   SDL_Surface *ispr = loadBMP("sprites/I.bmp");
   SDL_Surface *jspr = loadBMP("sprites/J.bmp");
@@ -619,7 +638,8 @@ int main(int argc, char **args)
   SDL_Surface *zspr = loadBMP("sprites/Z.bmp");
   SDL_Surface *ospr = loadBMP("sprites/O.bmp");
   SDL_Surface *tspr = loadBMP("sprites/T.bmp");
-  SDL_Surface *bgspr = loadBMP("sprites/bg.bmp");
+  SDL_Surface *bgspr = loadBMP("sprites/bg.bmp"); // board background
+  SDL_Surface *qbgspr = loadBMP("sprites/qbg.bmp"); // queue background
 
   sprites[NONE] = bgspr;
   sprites[I] = ispr;
@@ -630,13 +650,41 @@ int main(int argc, char **args)
   sprites[T] = tspr;
   sprites[O] = ospr;
 
+  sprites[QBG] = qbgspr;
+}
+
+void initscreen()
+{
+  // draw board
   for(int i = 0; i < 10; i++)
   {
     for(int j = 0; j < 20; j++)
     {
-      blitmino(0, 0, NONE, i, j);
+      blitmino(bX, bY, NONE, i, j);
     }
   }
+
+  // draw queue
+  for(int i = 0; i < queue_width; i++)
+  {
+    for(int j = 0; j < queue_height; j++)
+    {
+      blitmino(qX, qY, QBG, i, j);
+    }
+  }
+}
+
+int main(int argc, char **args)
+{
+  // initialize window
+  init("tetrui", SCREEN_WIDTH, SCREEN_HEIGHT);
+  SDL_FillRect( gsurf, NULL, SDL_MapRGB( gsurf->format, 0xFF, 0xFF, 0xFF ) );
+
+  // load sprites and put them in sprites[]
+  initsprites();
+
+  // draw hold, board, queue
+  initscreen();
 
   // init RNG
   srand(time(NULL));
@@ -688,7 +736,7 @@ int main(int argc, char **args)
 
       if(!locking) // start timer
       {
-      puts("grounded");
+      // puts("grounded");
         locking = true;
         lastreset = curtime;
       }
