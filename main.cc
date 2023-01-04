@@ -490,56 +490,27 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
     // changeboard(m[0], m[1], NONE);
   }
 
-  // copy the coords and double them to match up with center
-  auto cp = p.p;
-  for(auto &m : cp)
+  // attempt to rotate
+  bool rotated = rmeth(p, r);
+
+  if(rotated)
   {
-    m[0] *= 2;
-    m[1] *= 2;
+    // update rotstate on success
+    {
+      // 0, 1, 2, 3 in clockwise order
+      int st = p.r == ZERO ? 0 : (p.r == RIGHT ? 1 : (p.r == TWO ? 2 : 3));
+      int change = r == CW ? 1 : (p.r == FLIP ? 2 : 3);
+
+      st += change;
+      st %= 4;
+
+      p.r = st == 0 ? ZERO : (st == 1 ? RIGHT : st == 2 ? TWO : LEFT);
+    }
+
+    // return success
+    return true;
   }
 
-  // grab center coords
-  int cx = p.c[0];
-  int cy = p.c[1];
-
-  // rotate all minos around the center
-  for(auto &m : cp)
-  {
-    // diff := mino - center
-    int dx = m[0] - cx;
-    int dy = m[1] - cy;
-
-    // rotate difference vector
-    if(r == CCW) // swap then negate x coord
-    {
-      int temp = dx;
-      dx = -dy;
-      dy = temp;
-    }
-    if(r == CW) // swap then negate y coord
-    {
-      int temp = dy;
-      dy = -dx;
-      dx = temp;
-    }
-    if(r == FLIP) // negate both coords
-    {
-      // puts("flipping");
-      dy = -dy;
-      dx = -dx;
-    }
-
-    // mino := center + newdiff
-    m[0] = cx + dx;
-    m[1] = cy + dy;
-
-    // halve coords
-    m[0] /= 2;
-    m[1] /= 2;
-  }
-
-  // TODO update rotstate
-  
   // check for collisions/out of bounds
   for(auto &m : cp)
   {
