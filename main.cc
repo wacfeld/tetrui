@@ -70,6 +70,10 @@ const int qY = 0;
 const int queue_len = 5; // number of pieces to display
 const int queue_diff = 3; // number of minoes between pieces in hold
 
+// the queue, which is always full, determines what pieces come next
+// it itself is supplied using 7bag(), fullrand(), etc.
+enum type gqueue[queue_len];
+
 // bottom-left corner of top queue piece
 const int QCORN[] = {1,17};
 
@@ -618,9 +622,28 @@ void queuepiece(int place, enum type t)
   // get coords
   struct piece p = placepiece(x, y, t);
 
+  // draw blanks over the 4x2 area
+  for(int i = 0; i < 4; i++)
+  {
+    for(int j = 0; j < 2; j++)
+    {
+      queuemino(qX, qY, QBG, x+i, y+j);
+    }
+  }
+
+  // draw minoes
   for(auto &m : p.p)
   {
     queuemino(qX, qY, t, m[0], m[1]);
+  }
+}
+
+// draw the entire queue
+void drawqueue()
+{
+  for(int i = 0; i < queue_len; i++)
+  {
+    queuepiece(i, gqueue[i]);
   }
 }
 
@@ -684,27 +707,25 @@ enum type bag7()
     bag[siz++] = O;
 
     // shuffle
-    for(int i = 0; i < 100; i++)
+    for(int i = 0; i < 200; i++)
     {
       int j = rand() % 7;
       int k = rand() % 7;
-      
+      swap(bag[j], bag[k]);
     }
   }
 
+  // dish out 1 piece
+  siz--;
+  return bag[siz];
 }
 
-// whatever method (7-bag, etc.) selects the next piece
-enum type pickpiece()
+// most primitive method (randomly select pieces independently)
+enum type fullrand()
 {
-  // most primitive method (randomly select pieces independently)
-  // // available pieces
-  // static const enum type pieces[] = {I, J, L, S, Z, O, T};
-  // static const int npieces = sizeof(pieces) / sizeof(*pieces);
-  // return pieces[rand() % npieces];
-
-  // struct piece p = spawnpiece(pieces[rand() % npieces]);
-  // return p;
+  static const enum type pieces[] = {I, J, L, S, Z, O, T};
+  static const int npieces = sizeof(pieces) / sizeof(*pieces);
+  return pieces[rand() % npieces];
 }
 
 // check for line clears, spawn new piece and draw
@@ -760,7 +781,7 @@ struct piece nextpiece(struct piece &old)
 
   // pick next piece, draw, and return
   // struct piece p = pickpiece();
-  enum type t = pickpiece();
+  enum type t = bag7();
   struct piece p = spawnpiece(t);
   drawpiece(p);
   
@@ -846,7 +867,7 @@ int main(int argc, char **args)
   // TODO replace with 7-bag
   // struct piece p = spawnpiece(pieces[rand() % npieces]);
   // struct piece p = pickpiece();
-  enum type t = pickpiece();
+  enum type t = bag7();
   struct piece p = spawnpiece(t);
   drawpiece(p);
 
