@@ -9,6 +9,8 @@
 #include <set>
 
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
+
+// print error message to stderr & exit
 #define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); close(); exit(1); } while(0)
 
 typedef unsigned char uchar;
@@ -68,6 +70,9 @@ const int qY = 0;
 const int queue_len = 5; // number of pieces to display
 const int queue_diff = 3; // number of minoes between pieces in hold
 
+// bottom-left corner of top queue piece
+const int QCENT[] = {1,17};
+
 // board is 10x20
 const int SCREEN_WIDTH = MINO_LEN*vis_width + queue_width * MINO_LEN;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
@@ -90,10 +95,6 @@ const int ICENT[] = {3, -1};
 // this is the bottom-left corner of that box
 #define SX 3
 #define SY 20
-
-// bottom-left corner of top queue piece
-#define QX 1
-#define QY 17
 
 // #define SY1 (SY0+1)
 // #define SX1 (SX0+1)
@@ -231,6 +232,13 @@ void boardmino(int X, int Y, enum type t, int col, int row)
 // we can be efficient by only blitting things that have changed on gboard
 void reboardmino(int X, int Y, enum type t, int col, int row)
 {
+  // check bounds
+  if(row >= vis_height || col >= vis_width || row < 0 || col < 0)
+  {
+    // fprintf(stderr, "out of bounds: %d %d\n", row, col);
+    return;
+  }
+
   // only blit if contents of cell have changed
   // useful for being efficient during line clears
   if(gscreen[col][row] != gboard[col][row])
@@ -244,6 +252,39 @@ void reboardmino(int X, int Y, enum type t, int col, int row)
   }
 
   // changed[col][row] = 0;
+}
+
+void queuemino(int X, int Y, enum type t, int col, int row)
+{
+  // check bounds
+  if(row >= queue_height || col >= queue_width || row < 0 || col < 0)
+  {
+    fprintf(stderr, "queue out of bounds: (%d, %d)\n", col, row);
+    return;
+  }
+
+  int srow = queue_height - row - 1;
+  blitmino(X, Y, t, col, srow);
+
+  // don't bother with checking for changes with the queue, just redraw always
+}
+
+// place a whole piece 
+void queuepiece(int place, enum type t)
+{
+  // place: 0 is next piece, 1 is next-next, etc.
+  // used to calculate where to place minoes
+
+  if(place >= queue_len || place < 0)
+  {
+    fprintf(stderr, "queue placement: %d is not between [1, %d]\n", place+1, queue_len);
+  }
+
+  // calculate coords
+  int col = QCENT[0]; // always aligned to the left
+  int row = QCENT[1] - place * queue_diff; // moves down as place increases
+
+  queuemino(qX, qY, t, col, row);
 }
 
 // given a piece, draw the parts of it that are on the visible play area
@@ -724,7 +765,7 @@ void initscreen()
   {
     for(int j = 0; j < queue_height; j++)
     {
-      boardmino(qX, qY, QBG, i, j);
+      queuemino(qX, qY, QBG, i, j);
     }
   }
 }
