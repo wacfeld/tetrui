@@ -377,6 +377,13 @@ bool srs(struct piece &p, enum rot r)
     m[1] /= 2;
   }
 
+  // if 180 rotation, no kicks
+  if(r == FLIP)
+  {
+    p.p = cp;
+    return true;
+  }
+
   // decide on kick table
   std::array<std::array<int, 2>, 5> kt;
 
@@ -462,14 +469,19 @@ bool srs(struct piece &p, enum rot r)
     // if not, then that's the one
     if(!collides)
     {
-      // apply offset, write back, return
+      // apply offset
       for(auto &m : cp)
       {
         m[0] += off[0];
         m[1] += off[1];
       }
 
+      // write back
       p.p = cp;
+
+      // apply to center too
+      p.c[0] += 2 * off[0];
+      p.c[1] += 2 * off[1];
 
       return true;
     }
@@ -484,6 +496,7 @@ bool srs(struct piece &p, enum rot r)
 // (rotating O returns true always)
 bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enum rot r))
 {
+  printf("attempting to rotate %d\n", r);
   // delete piece from board
   for(auto &m : p.p)
   {
@@ -491,8 +504,13 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
     // changeboard(m[0], m[1], NONE);
   }
 
+  // save copy of piece
+  auto temp = p;
+
   // attempt to rotate
   bool rotated = rmeth(p, r);
+
+  putd(rotated);
 
   if(rotated)
   {
@@ -500,43 +518,35 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
     {
       // 0, 1, 2, 3 in clockwise order
       int st = p.r == ZERO ? 0 : (p.r == RIGHT ? 1 : (p.r == TWO ? 2 : 3));
-      int change = r == CW ? 1 : (p.r == FLIP ? 2 : 3);
+      int change = r == CW ? 1 : (r == FLIP ? 2 : 3);
 
       st += change;
       st %= 4;
 
       p.r = st == 0 ? ZERO : (st == 1 ? RIGHT : st == 2 ? TWO : LEFT);
     }
-
-    // return success
-    return true;
   }
 
-  // check for collisions/out of bounds
-  for(auto &m : cp)
-  {
-    if(!goodcoords(m[0], m[1]))
-    {
-      // TODO deal with kicks, etc.
-      // in the meantime, simply return failure
-      return false;
-    }
-  }
-
-  // undraw piece
-  undrawpiece(p);
-
-  // update piece & board
-  p.p = cp;
+  // put piece back on board, rotated or not
   for(auto &m : p.p)
   {
     gboard[m[0]][m[1]] = p.t;
     // changeboard(m[0], m[1], p.t);
   }
 
+
+  // failure
+  if(!rotated)
+  {
+    return false;
+  }
+
+  // success
+
+  // undraw piece
+  undrawpiece(temp);
   // redraw piece
   drawpiece(p);
-
   return true;
 }
 
