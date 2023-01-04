@@ -71,25 +71,38 @@ const int SCREEN_WIDTH = MINO_LEN*vis_width + queue_width * MINO_LEN;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
 // spawn center for J, L, S, Z, T
-// remember coords are doubled
-#define CENT {8, 40}
+// (4, 20) doubled
+// #define CENT {8, 40}
+const int CENT[] = {2, 0};
+
 // spawn center for O
-#define OCENT {9, 41}
+// (4.5, 20.5) doubled
+const int OCENT[] = {1, 1};
+
 // spawn center for I
-#define ICENT {9, 39}
+// (4.5, 19.5) doubled
+const int ICENT[] = {1, -1};
 
-// rows 21, 22
-#define SY0 20
-#define SY1 (SY0+1)
+// pieces spawn in some or all of columns 4, 5, 6, 7 (rounded left)
+// and rows 21, 22 (rounded down)
+// this is the bottom-left corner of that box
+#define SY 20
+#define SX 3
 
-// columns 4, 5, 6, 7
-#define SX0 3
-#define SX1 (SX0+1)
-#define SX2 (SX0+2)
-#define SX3 (SX0+3)
+// #define SY1 (SY0+1)
+// #define SX1 (SX0+1)
+// #define SX2 (SX0+2)
+// #define SX3 (SX0+3)
 
-// shapes in terms of offsets
-#define ISHAPE
+// starting shapes & orientations in terms of offsets from bottom-left corner
+// used to spawn pieces, populate the queue, hold, etc.
+#define ISHAPE {{0, 0}, {1, 0}, {2, 0}, {3, 0}}
+#define JSHAPE {{0, 1}, {0, 0}, {1, 0}, {2, 0}}
+#define LSHAPE {{0, 0}, {1, 0}, {2, 0}, {2, 1}}
+#define SSHAPE {{0, 0}, {1, 0}, {1, 1}, {2, 1}}
+#define ZSHAPE {{0, 1}, {1, 1}, {1, 0}, {2, 0}}
+#define OSHAPE {{1, 0}, {1, 1}, {2, 0}, {2, 1}}
+#define TSHAPE {{0, 0}, {1, 0}, {1, 1}, {2, 0}}
 
 // 0 = empty
 // L, J, S, Z, I, O, T = respective colored mino
@@ -410,14 +423,17 @@ bool topout(struct piece &p)
 {
   // TODO check for exceeding buffer (only possible in competitive)
 
+  // puts("topout?");
   for(auto &m : p.p)
   {
     if(gboard[m[0]][m[1]] != NONE) // spawn mino collides with existing mino
     {
+      // puts("yes!");
       return 1;
     }
   }
 
+  // puts("no!");
   return 0;
 }
 
@@ -426,14 +442,17 @@ void lose()
 {
   SDL_Event e;
 
-  while( SDL_PollEvent( &e ) != 0 )
+  while(1)
   {
-    //User requests quit
-    if( e.type == SDL_QUIT )
+    while( SDL_PollEvent( &e ) != 0 )
     {
-      close();
-      fprintf(stderr, "quitting\n");
-      exit(0);
+      //User requests quit
+      if( e.type == SDL_QUIT )
+      {
+        close();
+        fprintf(stderr, "quitting\n");
+        exit(0);
+      }
     }
   }
 }
@@ -447,45 +466,67 @@ struct piece spawnpiece(enum type t)
 
   // spawn on 21st row (0-indexed)
   // center of rotation below piece (or as low as possible)
+  p.c = {2*SX, 2*SY};
 
   if(t == I)
   {
-    p.p = {{{SX0, SY0}, {SX1, SY0}, {SX2, SY0}, {SX3, SY0}}};
-    p.c = ICENT; // (4.5, 19.5) doubled
+    p.p = {ISHAPE};
+    p.c[0] += ICENT[0];
+    p.c[1] += ICENT[1];
+    // p.c = ICENT;
   }
   else if(t == J)
   {
-    p.p = {{{SX0, SY1}, {SX0, SY0}, {SX1,SY0}, {SX2,SY0}}};
-    p.c = CENT;
+    p.p = {JSHAPE};
+    p.c[0] += CENT[0];
+    p.c[1] += CENT[1];
+    // p.c = CENT;
   }
   else if(t == L)
   {
-    p.p = {{{SX0, SY0}, {SX1, SY0}, {SX2, SY0}, {SX2, SY1}}};
-    p.c = CENT;
+    p.p = {LSHAPE};
+    p.c[0] += CENT[0];
+    p.c[1] += CENT[1];
+    // p.c = CENT;
   }
   else if(t == S)
   {
-    p.p = {{{SX0, SY0}, {SX1, SY0}, {SX1, SY1}, {SX2, SY1}}};
-    p.c = CENT;
+    p.p = {SSHAPE};
+    p.c[0] += CENT[0];
+    p.c[1] += CENT[1];
+    // p.c = CENT;
   }
   else if(t == Z)
   {
-    p.p = {{{SX0, SY1}, {SX1, SY1}, {SX1, SY0}, {SX2, SY0}}};
-    p.c = CENT;
+    p.p = {ZSHAPE};
+    p.c[0] += CENT[0];
+    p.c[1] += CENT[1];
+    // p.c = CENT;
   }
   else if(t == O)
   {
-    p.p = {{{SX1, SY0}, {SX1, SY1}, {SX2, SY0}, {SX2, SY1}}};
-    p.c = OCENT;
+    p.p = {OSHAPE};
+    p.c[0] = OCENT[0];
+    p.c[0] = OCENT[1];
+    // p.c = OCENT;
   }
   else if(t == T)
   {
-    p.p = {{{SX0, SY0}, {SX1, SY0}, {SX1, SY1}, {SX2, SY0}}};
-    p.c = CENT;
+    p.p = {TSHAPE};
+    p.c[0] += CENT[0];
+    p.c[1] += CENT[1];
+    // p.c = CENT;
   }
   else // error
   {
-    error("could not spawn mino %d\n", t);
+    error("mine type %d does not exist\n", t);
+  }
+
+  // add SX, SY to mino coords
+  for(auto &m : p.p)
+  {
+    m[0] += SX;
+    m[1] += SY;
   }
 
   // process garbage
@@ -496,7 +537,8 @@ struct piece spawnpiece(enum type t)
   {
     // indicate lost and return
     gstate = LOST;
-    return p;
+    lose();
+    // return p;
   }
 
 
@@ -693,6 +735,7 @@ int main(int argc, char **args)
   // TODO replace with 7-bag
   // struct piece p = spawnpiece(pieces[rand() % npieces]);
   struct piece p = pickpiece();
+  drawpiece(p);
 
   SDL_UpdateWindowSurface( gwin );
 
