@@ -1,0 +1,5 @@
+* tetrui
+- tetris UI
+- work in progress
+- roughly follows guideline tetris
+- ultimate goal is for testing bots that I/others create
