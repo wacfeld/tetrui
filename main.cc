@@ -452,7 +452,8 @@ bool srs(struct piece &p, enum rot r)
     bool collides = false;
     for(auto &m : cp)
     {
-      if(gboard[m[0]+off[0]][m[1]+off[1]] != NONE)
+      // if(gboard[m[0]+off[0]][m[1]+off[1]] != NONE)
+      if(goodcoords(m[0]+off[0], m[1]+off[1]))
       {
         collides = true;
       }
