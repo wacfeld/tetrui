@@ -42,8 +42,8 @@ struct piece
   enum type t;
   // center of rotation coords may be in-between minoes (for I and O)
   // hence c[2] coords are stored as double their actual value
-  std::array<uchar, 2> c;
-  std::array<std::array<uchar, 2>, 4> p;
+  std::array<int, 2> c;
+  std::array<std::array<int, 2>, 4> p;
 };
 
 // struct winsurf
@@ -71,7 +71,7 @@ const int queue_len = 5; // number of pieces to display
 const int queue_diff = 3; // number of minoes between pieces in hold
 
 // bottom-left corner of top queue piece
-const int QCENT[] = {1,17};
+const int QCORN[] = {1,17};
 
 // board is 10x20
 const int SCREEN_WIDTH = MINO_LEN*vis_width + queue_width * MINO_LEN;
@@ -267,24 +267,6 @@ void queuemino(int X, int Y, enum type t, int col, int row)
   blitmino(X, Y, t, col, srow);
 
   // don't bother with checking for changes with the queue, just redraw always
-}
-
-// place a whole piece 
-void queuepiece(int place, enum type t)
-{
-  // place: 0 is next piece, 1 is next-next, etc.
-  // used to calculate where to place minoes
-
-  if(place >= queue_len || place < 0)
-  {
-    fprintf(stderr, "queue placement: %d is not between [1, %d]\n", place+1, queue_len);
-  }
-
-  // calculate coords
-  int col = QCENT[0]; // always aligned to the left
-  int row = QCENT[1] - place * queue_diff; // moves down as place increases
-
-  queuemino(qX, qY, t, col, row);
 }
 
 // given a piece, draw the parts of it that are on the visible play area
@@ -512,16 +494,15 @@ void lose()
   }
 }
 
-// spawn a piece above the playing field according to guideline
-// see https://tetris.fandom.com/wiki/SRS?file=SRS-pieces.png
-struct piece spawnpiece(enum type t)
+// given top-left coords, return piece with correct type and mino/center coords
+struct piece placepiece(int x, int y, enum type t)
 {
   struct piece p;
   p.t = t;
 
   // spawn on 21st row (0-indexed)
   // center of rotation below piece (or as low as possible)
-  p.c = {2*SX, 2*SY};
+  p.c = {2*x, 2*y};
 
   if(t == I)
   {
@@ -574,15 +555,25 @@ struct piece spawnpiece(enum type t)
   }
   else // error
   {
-    error("mine type %d does not exist\n", t);
+    error("mino type %d does not exist\n", t);
   }
 
-  // add SX, SY to mino coords
+  // add x, y to mino coords
   for(auto &m : p.p)
   {
-    m[0] += SX;
-    m[1] += SY;
+    m[0] += x;
+    m[1] += y;
   }
+
+  return p;
+}
+
+// spawn a piece above the playing field according to guideline
+// see https://tetris.fandom.com/wiki/SRS?file=SRS-pieces.png
+struct piece spawnpiece(enum type t)
+{
+
+  struct piece p = placepiece(SX, SY, t);
 
   // process garbage
   // TODO
@@ -607,6 +598,30 @@ struct piece spawnpiece(enum type t)
   movepiece(p, 0, -1, false);
 
   return p;
+}
+
+// place a whole piece 
+void queuepiece(int place, enum type t)
+{
+  // place: 0 is next piece, 1 is next-next, etc.
+  // used to calculate where to place minoes
+
+  if(place >= queue_len || place < 0)
+  {
+    fprintf(stderr, "queue placement: %d is not between [1, %d]\n", place+1, queue_len);
+  }
+
+  // calculate coords of bottom-left
+  int x = QCORN[0]; // always aligned to the left
+  int y = QCORN[1] - place * queue_diff; // moves down as place increases
+
+  // get coords
+  struct piece p = placepiece(x, y, t);
+
+  for(auto &m : p.p)
+  {
+    queuemino(qX, qY, t, m[0], m[1]);
+  }
 }
 
 // returns true if piece touching ground
@@ -642,14 +657,15 @@ bool grounded(struct piece &p)
 }
 
 // whatever method (7-bag, etc.) selects the next piece
-struct piece pickpiece()
+enum type pickpiece()
 {
   // spawn new piece
   static enum type pieces[] = {I, J, L, S, Z, O, T};
   static int npieces = sizeof(pieces) / sizeof(*pieces);
 
-  struct piece p = spawnpiece(pieces[rand() % npieces]);
-  return p;
+  return pieces[rand() % npieces];
+  // struct piece p = spawnpiece(pieces[rand() % npieces]);
+  // return p;
 }
 
 // check for line clears, spawn new piece and draw
@@ -705,7 +721,9 @@ struct piece nextpiece(struct piece &old)
   }
 
   // pick next piece, draw, and return
-  struct piece p = pickpiece();
+  // struct piece p = pickpiece();
+  enum type t = pickpiece();
+  struct piece p = spawnpiece(t);
   drawpiece(p);
   
   return p;
@@ -785,11 +803,20 @@ int main(int argc, char **args)
   // init RNG
   srand(time(NULL));
 
+
   // get random piece to start & update
   // TODO replace with 7-bag
   // struct piece p = spawnpiece(pieces[rand() % npieces]);
-  struct piece p = pickpiece();
+  // struct piece p = pickpiece();
+  enum type t = pickpiece();
+  struct piece p = spawnpiece(t);
   drawpiece(p);
+
+  for(int i = 0; i < queue_len; i++)
+  {
+    t = pickpiece();
+    queuepiece(i, t);
+  }
 
   SDL_UpdateWindowSurface( gwin );
 
