@@ -6,6 +6,7 @@
 
 ** dependencies
 - SDL 2
+  - ~sudo apt install libsdl2-dev~
 
 ** build & run
 #+BEGIN_SRC
