@@ -15,3 +15,14 @@ make
 ./tetrui.out
 #+END_SRC
 
+** controls
+controls are hardcoded. you will have to edit the source and recompile to change them.
+
+- left :: =o=
+- right :: =]=
+- soft drop :: =w=
+- hard drop :: =v=
+- CCW :: =w=
+- CW :: =r=
+- 180 :: =e=
+- hold :: =a=

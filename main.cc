@@ -1299,39 +1299,46 @@ int main(int argc, char **args)
         // }
         // else if(sym == SDLK_DOWN)
         // else if(sym == SDLK_w) // soft drop
-        if(sym == SDLK_w) // soft drop
+        // if(sym == SDLK_w) // soft drop
+        if(sym == SDLK_COMMA) // soft drop
         {
           moved = movepiece(p, 0, -1, 0);
         }
         // else if(sym == SDLK_LEFT)
-        else if(sym == SDLK_r)
+        // else if(sym == SDLK_r)
+        else if(sym == SDLK_o)
         {
           moved = movepiece(p, -1, 0, 0);
         }
         // else if(sym == SDLK_RIGHT)
-        else if(sym == SDLK_AT)
+        // else if(sym == SDLK_AT)
+        else if(sym == SDLK_RIGHTBRACKET)
         {
           moved = movepiece(p, 1, 0, 0);
         }
 
         // rotation (currently dvorak keyboard)
         // else if(sym == SDLK_a) // CCW
-        else if(sym == SDLK_COMMA) // CCW
+        // else if(sym == SDLK_COMMA) // CCW
+        else if(sym == SDLK_w) // CCW
         {
           moved = rotatepiece(p, CCW, srs);
         }
         // else if(sym == SDLK_o) // 180
-        else if(sym == SDLK_PERIOD) // 180
+        // else if(sym == SDLK_PERIOD) // 180
+        else if(sym == SDLK_e) // 180
         {
           moved = rotatepiece(p, FLIP, srs);
         }
         // else if(sym == SDLK_e) // CW
-        else if(sym == SDLK_p) // CW
+        // else if(sym == SDLK_p) // CW
+        else if(sym == SDLK_r) // CW
         {
           moved = rotatepiece(p, CW, srs);
         }
 
         // else if(sym == SDLK_LSHIFT) // hold
+        // else if(sym == SDLK_a) // hold
         else if(sym == SDLK_a) // hold
         {
           if(canhold)
@@ -1358,7 +1365,8 @@ int main(int argc, char **args)
         }
 
         // else if(sym == SDLK_SPACE) // hard drop
-        else if(sym == SDLK_k) // hard drop
+        // else if(sym == SDLK_k) // hard drop
+        else if(sym == SDLK_v) // hard drop
         {
           movepiece(p, 0, -1, true); // move down repeatedly
           p = nextpiece(p, qmeth);
