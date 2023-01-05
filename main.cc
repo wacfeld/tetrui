@@ -1192,8 +1192,13 @@ int main(int argc, char **args)
   // gqueue[0] = S;
 
   // bugs:
-  // - trying to twist S into above setup sometimes deletes blocks
-  // - key inputs are cancelling each other
+  // - [X] trying to twist S into above setup sometimes deletes blocks
+  // - [ ] key inputs are cancelling each other
+
+  // todo:
+  // - ghost piece
+  // - proper move reset
+  // - DAS/ARR
 
 
   // grab first piece from queue, draw everything
