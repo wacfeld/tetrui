@@ -1150,7 +1150,7 @@ int main(int argc, char **args)
   uint lastgrav = 0; // ms since last gravity tick
   uint gravdelay = 1000; // ms between gravity ticks
   uint curtime = 0; // current time in ms
-  bool dograv = false;
+  bool dograv = true;
 
   // lock down
   // int movecount = 0;
@@ -1287,6 +1287,17 @@ int main(int argc, char **args)
           {
             fprintf(stderr, "you have already used the hold once this turn\n");
           }
+        }
+
+        else if(sym == SDLK_SPACE) // hard drop
+        {
+          movepiece(p, 0, -1, true); // move down repeatedly
+          p = nextpiece(p, qmeth);
+
+          SDL_UpdateWindowSurface(gwin);
+
+          nextturn();
+          continue;
         }
 
         // reset lock timer
