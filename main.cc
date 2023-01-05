@@ -390,18 +390,30 @@ bool srs(struct piece &p, enum rot r)
     m[1] /= 2;
   }
 
-  // if 180 rotation, no kicks
-  if(r == FLIP)
-  {
-    p.p = cp;
-    return true;
-  }
 
   // decide on kick table
   std::array<std::array<int, 2>, 5> kt;
 
+
+  // O has no kick table
+  if(p.t == O)
+  {
+    static unsigned long long ORC = 0;
+    ORC++;
+    fprintf(stderr, "why are you rotating an O piece? this is the %Lu%s time you've done this\n", ORC, suffix(ORC));
+    return true;
+  }
+
+  // if 180 rotation, no kicks
+  else if(r == FLIP)
+  {
+    kt = {{{0,0}}};
+    // p.p = cp;
+    // return true;
+  }
+
   // JLSTZ kick table
-  if(p.t == J || p.t == L || p.t == S || p.t == Z || p.t == T)
+  else if(p.t == J || p.t == L || p.t == S || p.t == Z || p.t == T)
   {
     if(p.r == ZERO && r == CW) // 0->R
       kt = {{{0,0}, {-1,0}, {-1,1}, {0,-2}, {-1,-2}}};
@@ -456,13 +468,9 @@ bool srs(struct piece &p, enum rot r)
       kt = {{{0,0}, {-1,0}, {2,0}, {-1,2}, {2,-1}}};
   }
 
-  // O has no kick table
   else
   {
-    static unsigned long long ORC = 0;
-    ORC++;
-    fprintf(stderr, "why are you rotating an O piece? this is the %Lu%s time you've done this\n", ORC, suffix(ORC));
-    return true;
+    error("invalid piece type %d\n", p.t);
   }
 
   // try each of the 5 offsets (including (0,0)) one at a time
@@ -1106,22 +1114,22 @@ int main(int argc, char **args)
     gqueue[i] = qmeth();
   }
 
-  for(int i = 0; i < 10; i++)
-  {
-    boardmino(bX, bY, I, i, 0);
-    boardmino(bX, bY, I, i, 1);
-    gboard[i][0] = I;
-    gboard[i][1] = I;
-  }
-  gboard[5][0] = NONE;
-  gboard[6][0] = NONE;
-  gboard[6][1] = NONE;
-  gboard[7][1] = NONE;
-  boardmino(bX, bY, NONE, 5, 0);
-  boardmino(bX, bY, NONE, 6, 0);
-  boardmino(bX, bY, NONE, 6, 1);
-  boardmino(bX, bY, NONE, 7, 1);
-  gqueue[0] = S;
+  // for(int i = 0; i < 10; i++)
+  // {
+  //   boardmino(bX, bY, I, i, 0);
+  //   boardmino(bX, bY, I, i, 1);
+  //   gboard[i][0] = I;
+  //   gboard[i][1] = I;
+  // }
+  // gboard[5][0] = NONE;
+  // gboard[6][0] = NONE;
+  // gboard[6][1] = NONE;
+  // gboard[7][1] = NONE;
+  // boardmino(bX, bY, NONE, 5, 0);
+  // boardmino(bX, bY, NONE, 6, 0);
+  // boardmino(bX, bY, NONE, 6, 1);
+  // boardmino(bX, bY, NONE, 7, 1);
+  // gqueue[0] = S;
 
   // bugs:
   // - trying to twist S into above setup sometimes deletes blocks
