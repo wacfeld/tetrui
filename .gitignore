@@ -4,9 +4,6 @@ main
 *.a
 *.d
 *.sw*
-*.bmp
 *.out
-sprites/
 tags
-*.xcf
 \#*\#
