@@ -1075,6 +1075,7 @@ void initscreen()
     for(int j = 0; j < vis_height; j++)
     {
       boardmino(bX, bY, NONE, i, j);
+      // boardmino(bX, bY, bag7(), i, j);
     }
   }
 
@@ -1088,11 +1089,67 @@ void initscreen()
   }
 }
 
+void wait(uint ms)
+{
+  uint oldtime = SDL_GetTicks();
+  uint curtime = oldtime;
+  SDL_Event e;
+  while(true)
+  {
+    while( SDL_PollEvent( &e ) != 0 )
+    {
+      if( e.type == SDL_QUIT )
+      {
+        close();
+        fprintf(stderr, "quitting\n");
+        exit(0);
+      }
+    }
+    curtime = SDL_GetTicks();
+    if(curtime - oldtime >= ms)
+    {
+      // fprintf(stderr, "breaking; delta is %u\n", curtime - oldtime);
+      break;
+    }
+  }
+  
+}
+
+void splash(enum type (*qmeth)(void), uint d1, uint d2)
+{
+  for(int j = 0; j < vis_height; j++)
+  {
+    for(int i = 0; i < vis_width; i++)
+    {
+      boardmino(bX, bY, qmeth(), i, j);
+    }
+    SDL_UpdateWindowSurface( gwin );
+    wait(d1);
+  }
+
+  wait(d2);
+
+  for(int j = 0; j < vis_height; j++)
+  {
+    for(int i = 0; i < vis_width; i++)
+    {
+      boardmino(bX, bY, NONE, i, j);
+    }
+    SDL_UpdateWindowSurface( gwin );
+    wait(d1);
+  }
+  
+  wait(d2);
+}
+
 // set state variables for next turn
 #define nextturn() do {canhold = true; locking = false; lastgrav = curtime;} while(0)
 
 int main(int argc, char **args)
 {
+  // init RNG
+  srand(time(NULL));
+
   // initialize window
   init("tetrui", SCREEN_WIDTH, SCREEN_HEIGHT);
   SDL_FillRect( gsurf, NULL, SDL_MapRGB( gsurf->format, 0xFF, 0xFF, 0xFF ) );
@@ -1103,11 +1160,14 @@ int main(int argc, char **args)
   // draw hold, board, queue
   initscreen();
 
-  // init RNG
-  srand(time(NULL));
-
   enum type (*qmeth)(void) = bag7;
 
+  bool dosplash = true;
+  if(dosplash)
+  {
+    splash(qmeth, 20, 300);
+  }
+  
   // fill & draw the queue
   for(int i = 0; i < queue_len; i++)
   {
