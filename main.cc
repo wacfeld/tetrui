@@ -935,6 +935,33 @@ enum type queuenext(enum type (*qmeth)(void))
   return next;
 }
 
+struct piece swaphold(struct piece &p, enum type (*qmeth)(void))
+{
+  enum type t; // type of new piece
+
+  if(ghold == NONE) // empty hold, grab from queue
+  {
+    t = queuenext(qmeth);
+    ghold = p.t;
+  }
+  else // swap with hold
+  {
+    t = ghold;
+    ghold = p.t;
+  }
+
+  // delete old piece and undraw
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = NONE;
+  }
+  undrawpiece(p);
+
+  // spawn new piece & return it
+  struct piece q = spawnpiece(t);
+  return q;
+}
+
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
 struct piece nextpiece(struct piece &old, enum type (*qmeth)(void))
@@ -1052,6 +1079,9 @@ void initscreen()
   }
 }
 
+// set state variables for next turn
+#define nextturn() do {canhold = true; locking = false; lastgrav = curtime;} while(0)
+
 int main(int argc, char **args)
 {
   // initialize window
@@ -1098,6 +1128,9 @@ int main(int argc, char **args)
   bool locking = false; // becomes true whenever piece is touching the ground
   bool doground = true;
 
+  // after hold is used once, set to false until lock down
+  bool canhold = true;
+
   bool quit = false;
   SDL_Event e;
 
@@ -1139,8 +1172,10 @@ int main(int argc, char **args)
         p = nextpiece(p, qmeth);
         SDL_UpdateWindowSurface(gwin);
 
-        locking = false;
-        lastgrav = curtime;
+        nextturn();
+        // canhold = true;
+        // locking = false;
+        // lastgrav = curtime;
 
         continue;
       }
@@ -1161,6 +1196,7 @@ int main(int argc, char **args)
 
       else if( e.type == SDL_KEYDOWN )
       {
+        // keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
         auto sym = e.key.keysym.sym;
 
         bool moved = false;
@@ -1197,6 +1233,31 @@ int main(int argc, char **args)
           moved = rotatepiece(p, CW, srs);
         }
 
+        else if(sym == SDLK_LSHIFT) // hold
+        {
+          if(canhold)
+          {
+            // perform hold
+            p = swaphold(p, qmeth);
+
+            // draw
+            drawpiece(p);
+            drawqueue(); // queue might have been updated if ghold == NONE originally
+            drawholdpiece(ghold);
+            SDL_UpdateWindowSurface(gwin);
+
+            // reset state variables
+            nextturn();
+            canhold = false; // but don't reset this one
+
+            continue;
+          }
+          else
+          {
+            fprintf(stderr, "you have already used the hold once this turn\n");
+          }
+        }
+
         // reset lock timer
         if(moved && locking)
         {
@@ -1212,5 +1273,4 @@ int main(int argc, char **args)
   return 0;
 }
 
-// keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
 // guideline https://tetris.wiki/Tetris_Guideline
