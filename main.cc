@@ -19,8 +19,6 @@ typedef unsigned int uint;
 //Screen dimension constants
 // my screen is 1366x768
 
-const int MINO_LEN = 32;
-
 // total (including buffer) and visible dimensions of board
 const int tot_height = 40;
 const int tot_width = 10;
@@ -62,17 +60,28 @@ SDL_Window *gwin;
 SDL_Surface *gsurf;
 std::array<SDL_Surface *, 9> sprites;
 
+const int MINO_LEN = 32;
+
+// hold area top-left corner
+const int hX = 0;
+const int hY = 0;
+const int hold_width = 6;
+const int hold_height = 20;
+
 // graphical board top-left corner
-const int bX = 0;
+const int bX = hX + MINO_LEN * hold_width;
 const int bY = 0;
 
 // queue (to the right of board)
+const int qX = bX + MINO_LEN * vis_width;
+const int qY = 0;
 const int queue_width = 6; // number of minoes
 const int queue_height = vis_height;
-const int qX = MINO_LEN * vis_width;
-const int qY = 0;
 const int queue_len = 5; // number of pieces to display
 const int queue_diff = 3; // number of minoes between pieces in hold
+
+// hold slot. NONE means empty (start of game)
+enum type ghold = NONE;
 
 // the queue, which is always full, determines what pieces come next
 // it itself is supplied using 7bag(), fullrand(), etc.
@@ -81,8 +90,11 @@ enum type gqueue[queue_len];
 // bottom-left corner of top queue piece
 const int QCORN[] = {1,17};
 
+// bottom-left corner of hold piece
+const int HCORN[] = {1,17};
+
 // board is 10x20
-const int SCREEN_WIDTH = MINO_LEN*vis_width + queue_width * MINO_LEN;
+const int SCREEN_WIDTH = MINO_LEN*(hold_width + vis_width + queue_width);
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
 // spawn center for J, L, S, Z, T
@@ -761,8 +773,28 @@ struct piece spawnpiece(enum type t)
   return p;
 }
 
+void drawholdpiece(enum type t)
+{
+  struct piece p = placepiece(HCORN[0], HCORN[1], t);
+
+  // draw blanks
+  for(int i = 0; i < 4; i++)
+  {
+    for(int j = 0; j < 2; j++)
+    {
+      queuemino(hX, hY, QBG, HCORN[0]+i, HCORN[1]+j);
+    }
+  }
+
+  // draw minoes
+  for(auto &m : p.p)
+  {
+    queuemino(hX, hY, t, m[0], m[1]);
+  }
+}
+
 // place a whole piece 
-void queuepiece(int place, enum type t)
+void drawqueuepiece(int place, enum type t)
 {
   // place: 0 is next piece, 1 is next-next, etc.
   // used to calculate where to place minoes
@@ -800,7 +832,7 @@ void drawqueue()
 {
   for(int i = 0; i < queue_len; i++)
   {
-    queuepiece(i, gqueue[i]);
+    drawqueuepiece(i, gqueue[i]);
   }
 }
 
@@ -964,19 +996,6 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(void))
   return p;
 }
 
-// // at start of game, no old piece, so this version does not do any clears
-// struct piece nextpiece()
-// {
-//   puts("hi");
-//   // pick next piece, draw, and return
-//   struct piece p = pickpiece();
-//   drawpiece(p);
-
-//   printf("%d\n", p.t);
-  
-//   return p;
-// }
-
 void initsprites()
 {
   // load sprites
@@ -1004,10 +1023,20 @@ void initsprites()
 
 void initscreen()
 {
-  // draw board
-  for(int i = 0; i < 10; i++)
+  // draw hold
+  for(int i = 0; i < hold_width; i++)
   {
-    for(int j = 0; j < 20; j++)
+    for(int j = 0; j < hold_height; j++)
+    {
+      // reuse queue background here
+      boardmino(hX, hY, QBG, i, j);
+    }
+  }
+
+  // draw board
+  for(int i = 0; i < vis_width; i++)
+  {
+    for(int j = 0; j < vis_height; j++)
     {
       boardmino(bX, bY, NONE, i, j);
     }
