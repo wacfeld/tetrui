@@ -3,3 +3,15 @@
 - work in progress
 - roughly follows guideline tetris
 - ultimate goal is for testing bots that I/others create
+
+** dependencies
+- SDL 2
+
+** build & run
+#+BEGIN_SRC
+git clone https://github.com/wacfeld/tetrui.git
+cd tetrui
+make
+./tetrui.out
+#+END_SRC
+
