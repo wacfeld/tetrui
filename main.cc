@@ -261,7 +261,8 @@ void reboardmino(int X, int Y, enum type t, int col, int row)
 
   // only blit if contents of cell have changed
   // useful for being efficient during line clears
-  if(gscreen[col][row] != gboard[col][row])
+  // if(gscreen[col][row] != gboard[col][row])
+  if(gscreen[col][row] != t)
   {
     // puts("blitting");
     boardmino(X, Y, t, col, row);
@@ -1105,6 +1106,28 @@ int main(int argc, char **args)
     gqueue[i] = qmeth();
   }
 
+  for(int i = 0; i < 10; i++)
+  {
+    boardmino(bX, bY, I, i, 0);
+    boardmino(bX, bY, I, i, 1);
+    gboard[i][0] = I;
+    gboard[i][1] = I;
+  }
+  gboard[5][0] = NONE;
+  gboard[6][0] = NONE;
+  gboard[6][1] = NONE;
+  gboard[7][1] = NONE;
+  boardmino(bX, bY, NONE, 5, 0);
+  boardmino(bX, bY, NONE, 6, 0);
+  boardmino(bX, bY, NONE, 6, 1);
+  boardmino(bX, bY, NONE, 7, 1);
+  gqueue[0] = S;
+
+  // bugs:
+  // - trying to twist S into above setup sometimes deletes blocks
+  // - key inputs are cancelling each other
+
+
   // grab first piece from queue, draw everything
   enum type t = queuenext(qmeth);
   struct piece p = spawnpiece(t);
@@ -1119,7 +1142,7 @@ int main(int argc, char **args)
   uint lastgrav = 0; // ms since last gravity tick
   uint gravdelay = 1000; // ms between gravity ticks
   uint curtime = 0; // current time in ms
-  bool dograv = true;
+  bool dograv = false;
 
   // lock down
   // int movecount = 0;
