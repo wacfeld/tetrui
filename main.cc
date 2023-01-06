@@ -657,7 +657,7 @@ bool topout(struct piece &p)
 // run until told to quit by user, no other input is processed
 void lose()
 {
-  fprintf(stderr, "lost\n");
+  fprintf(stderr, "game over\n");
 
   SDL_Event e;
 
@@ -887,11 +887,17 @@ void swap(enum type &a, enum type &b)
 
 // get a single piece type using the 7-bag method
 // uses static variables to maintain state
-enum type bag7()
+enum type bag7(bool reset)
 {
   static enum type bag[7];
   static int siz = 0;
 
+  if(reset)
+  {
+    siz = 0;
+    return NONE; // return type doesn't matter
+  }
+  
   // bag is empty
   if(siz == 0)
   {
@@ -927,7 +933,7 @@ enum type fullrand()
 }
 
 // return next piece from gqueue, shift queue forward
-enum type queuenext(enum type (*qmeth)(void))
+enum type queuenext(enum type (*qmeth)(bool reset))
 {
   // grab next piece type
   enum type next = gqueue[0];
@@ -939,12 +945,12 @@ enum type queuenext(enum type (*qmeth)(void))
   }
 
   // put new piece at back of queue using given method
-  gqueue[queue_len - 1] = qmeth();
+  gqueue[queue_len - 1] = qmeth(false);
 
   return next;
 }
 
-struct piece swaphold(struct piece &p, enum type (*qmeth)(void))
+struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
 {
   enum type t; // type of new piece
 
@@ -973,7 +979,7 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(void))
 
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
-struct piece nextpiece(struct piece &old, enum type (*qmeth)(void))
+struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset))
 {
   // TODO check for tetrises, tspins, etc.
 
@@ -1115,13 +1121,13 @@ void wait(uint ms)
   
 }
 
-void splash(enum type (*qmeth)(void), uint d1, uint d2)
+void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
 {
   for(int j = 0; j < vis_height; j++)
   {
     for(int i = 0; i < vis_width; i++)
     {
-      boardmino(bX, bY, qmeth(), i, j);
+      boardmino(bX, bY, qmeth(false), i, j);
     }
     SDL_UpdateWindowSurface( gwin );
     wait(d1);
@@ -1160,18 +1166,21 @@ int main(int argc, char **args)
   // draw hold, board, queue
   initscreen();
 
-  enum type (*qmeth)(void) = bag7;
+  enum type (*qmeth)(bool reset) = bag7;
 
   bool dosplash = true;
   if(dosplash)
   {
     splash(qmeth, 20, 300);
   }
+
+  // reset queue
+  qmeth(true);
   
   // fill & draw the queue
   for(int i = 0; i < queue_len; i++)
   {
-    gqueue[i] = qmeth();
+    gqueue[i] = qmeth(false);
   }
 
   // for(int i = 0; i < 10; i++)
@@ -1212,9 +1221,9 @@ int main(int argc, char **args)
   // start the game
 
   // gravity
-  uint lastgrav = 0; // ms since last gravity tick
+  uint lastgrav = SDL_GetTicks(); // time of last gravity tick
   uint gravdelay = 1000; // ms between gravity ticks
-  uint curtime = 0; // current time in ms
+  uint curtime; // current time in ms
   bool dograv = true;
 
   // lock down
