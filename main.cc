@@ -156,7 +156,6 @@ enum state gstate = PLAYING;
 /* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
 void close()
 {
-  return;
   SDL_DestroyWindow(gwin);
   gwin = NULL;
   gsurf = NULL;
