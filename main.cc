@@ -874,9 +874,12 @@ void drawqueue()
 // returns true if piece touching ground
 bool grounded(struct piece &p)
 {
-  // delete piece from board temporarily
+  // save copy and then delete piece from board
+  enum type saved[4];
+  int i = 0;
   for(auto &m : p.p)
   {
+    saved[i++] = gboard[m[0]][m[1]];
     gboard[m[0]][m[1]] = NONE;
     // changeboard(m[0], m[1], NONE);
   }
@@ -892,15 +895,65 @@ bool grounded(struct piece &p)
     }
   }
 
-  // reinstate piece
+  // reinstate piece, if it ever existed
+  i = 0;
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = p.t;
+    gboard[m[0]][m[1]] = saved[i++];
+    // gboard[m[0]][m[1]] = p.t;
     // changeboard(m[0], m[1], p.t);
-    
   }
 
   return g;
+}
+
+void undrawghost(struct piece &p)
+{
+  for(auto &m : p.p)
+  {
+    boardmino(bX, bY, gboard[m[0]][m[1]], m[0], m[1]);
+  }
+}
+
+// given current piece, draw a ghost piece for it
+struct piece drawghost(struct piece &p)
+{
+  // make copy
+  struct piece q = p;
+
+  // delete piece from board temporarily
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = NONE;
+  }
+
+  // move the copy down until it's grounded
+  while(!grounded(q))
+  {
+    // decrement all y coords
+    for(auto &m : q.p)
+    {
+      m[1]--;
+    }
+  }
+
+  // replace piece on board
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = p.t;
+  }
+
+  // draw ghost piece wherever not occupied already
+  for(auto &m : q.p)
+  {
+    if(gboard[m[0]][m[1]] == NONE)
+    {
+      boardmino(bX, bY, GHOST, m[0], m[1]);
+    }
+  }
+
+  // return for later undrawing
+  return q;
 }
 
 // used to shuffle bags
@@ -1243,6 +1296,10 @@ int main(int argc, char **args)
   drawpiece(p);
   drawqueue();
 
+  struct piece ghost = drawghost(p);
+
+  // boardmino(bX, bY, GHOST, 0, 0);
+
   SDL_UpdateWindowSurface( gwin );
 
   struct keybinds binds = arr_wasd;
@@ -1304,6 +1361,7 @@ int main(int argc, char **args)
       {
         // spawn new piece, reset variables, and continue
         p = nextpiece(p, qmeth);
+        ghost = drawghost(p);
         SDL_UpdateWindowSurface(gwin);
 
         nextturn();
@@ -1347,22 +1405,32 @@ int main(int argc, char **args)
         else if(sym == binds.l)
         {
           moved = movepiece(p, -1, 0, 0);
+          undrawghost(ghost);
+          ghost = drawghost(p);
         }
         else if(sym == binds.r)
         {
           moved = movepiece(p, 1, 0, 0);
+          undrawghost(ghost);
+          ghost = drawghost(p);
         }
         else if(sym == binds.ccw)
         {
           moved = rotatepiece(p, CCW, srs);
+          undrawghost(ghost);
+          ghost = drawghost(p);
         }
         else if(sym == binds.f)
         {
           moved = rotatepiece(p, FLIP, srs);
+          undrawghost(ghost);
+          ghost = drawghost(p);
         }
         else if(sym == binds.cw)
         {
           moved = rotatepiece(p, CW, srs);
+          undrawghost(ghost);
+          ghost = drawghost(p);
         }
 
         else if(sym == binds.h)
@@ -1371,6 +1439,10 @@ int main(int argc, char **args)
           {
             // perform hold
             p = swaphold(p, qmeth);
+
+            // update ghost
+            undrawghost(ghost);
+            ghost = drawghost(p);
 
             // draw
             drawpiece(p);
@@ -1394,6 +1466,10 @@ int main(int argc, char **args)
         {
           movepiece(p, 0, -1, true); // move down repeatedly
           p = nextpiece(p, qmeth);
+
+          // update ghost
+          undrawghost(ghost);
+          ghost = drawghost(p);
 
           SDL_UpdateWindowSurface(gwin);
 
