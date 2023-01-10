@@ -35,7 +35,34 @@ enum rot {CW, FLIP, CCW}; // FLIP means 180
 enum rotstate {ZERO, RIGHT, LEFT, TWO};
 
 // NONE specifies that a square is empty
-enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8};
+enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9};
+
+struct keybinds
+{
+  SDL_Keycode sd; // soft drop
+  SDL_Keycode hd; // hard drop
+  SDL_Keycode l; // move left
+  SDL_Keycode r; // move right
+  SDL_Keycode ccw; // counterclockwise
+  SDL_Keycode cw; // clockwise
+  SDL_Keycode f; // 180
+  SDL_Keycode h; // hold
+};
+
+// arrows move + WASD + shift + space
+struct keybinds arr_wasd =
+{
+  .hd = SDLK_SPACE,
+  .h  = SDLK_LSHIFT,
+
+  .l  = SDLK_LEFT,
+  .r  = SDLK_RIGHT,
+  .sd = SDLK_DOWN,
+
+  .ccw = SDLK_a,
+  .cw = SDLK_d,
+  .f  = SDLK_s
+}
 
 // a piece is a type, a center of rotation, and 4 minoes
 struct piece
@@ -1049,6 +1076,7 @@ void initsprites()
   SDL_Surface *tspr = loadBMP("sprites/T.bmp");
   SDL_Surface *bgspr = loadBMP("sprites/bg.bmp"); // board background
   SDL_Surface *qbgspr = loadBMP("sprites/qbg.bmp"); // queue background
+  SDL_Surface *gspr = loadBMP("sprites/ghost.bmp"); // ghost piece
 
   sprites[NONE] = bgspr;
   sprites[I] = ispr;
@@ -1058,7 +1086,7 @@ void initsprites()
   sprites[Z] = zspr;
   sprites[T] = tspr;
   sprites[O] = ospr;
-
+  sprites[GHOST] = gspr;
   sprites[QBG] = qbgspr;
 }
 
