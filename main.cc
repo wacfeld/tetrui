@@ -39,14 +39,14 @@ enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9};
 
 struct keybinds
 {
-  SDL_Keycode sd; // soft drop
   SDL_Keycode hd; // hard drop
+  SDL_Keycode h; // hold
   SDL_Keycode l; // move left
   SDL_Keycode r; // move right
+  SDL_Keycode sd; // soft drop
   SDL_Keycode ccw; // counterclockwise
   SDL_Keycode cw; // clockwise
   SDL_Keycode f; // 180
-  SDL_Keycode h; // hold
 };
 
 // arrows move + WASD + shift + space
@@ -62,7 +62,7 @@ struct keybinds arr_wasd =
   .ccw = SDLK_a,
   .cw = SDLK_d,
   .f  = SDLK_s
-}
+};
 
 // a piece is a type, a center of rotation, and 4 minoes
 struct piece
@@ -1245,6 +1245,8 @@ int main(int argc, char **args)
 
   SDL_UpdateWindowSurface( gwin );
 
+  struct keybinds binds = arr_wasd;
+
   // start the game
 
   // gravity
@@ -1338,49 +1340,32 @@ int main(int argc, char **args)
         // {
         //   moved = movepiece(p, 0, 1, 0);
         // }
-        // else if(sym == SDLK_DOWN)
-        // else if(sym == SDLK_w) // soft drop
-        // if(sym == SDLK_w) // soft drop
-        if(sym == SDLK_COMMA) // soft drop
+        if(sym == binds.sd)
         {
           moved = movepiece(p, 0, -1, 0);
         }
-        // else if(sym == SDLK_LEFT)
-        // else if(sym == SDLK_r)
-        else if(sym == SDLK_o)
+        else if(sym == binds.l)
         {
           moved = movepiece(p, -1, 0, 0);
         }
-        // else if(sym == SDLK_RIGHT)
-        // else if(sym == SDLK_AT)
-        else if(sym == SDLK_RIGHTBRACKET)
+        else if(sym == binds.r)
         {
           moved = movepiece(p, 1, 0, 0);
         }
-
-        // rotation (currently dvorak keyboard)
-        // else if(sym == SDLK_a) // CCW
-        // else if(sym == SDLK_COMMA) // CCW
-        else if(sym == SDLK_w) // CCW
+        else if(sym == binds.ccw)
         {
           moved = rotatepiece(p, CCW, srs);
         }
-        // else if(sym == SDLK_o) // 180
-        // else if(sym == SDLK_PERIOD) // 180
-        else if(sym == SDLK_e) // 180
+        else if(sym == binds.f)
         {
           moved = rotatepiece(p, FLIP, srs);
         }
-        // else if(sym == SDLK_e) // CW
-        // else if(sym == SDLK_p) // CW
-        else if(sym == SDLK_r) // CW
+        else if(sym == binds.cw)
         {
           moved = rotatepiece(p, CW, srs);
         }
 
-        // else if(sym == SDLK_LSHIFT) // hold
-        // else if(sym == SDLK_a) // hold
-        else if(sym == SDLK_a) // hold
+        else if(sym == binds.h)
         {
           if(canhold)
           {
@@ -1405,9 +1390,7 @@ int main(int argc, char **args)
           }
         }
 
-        // else if(sym == SDLK_SPACE) // hard drop
-        // else if(sym == SDLK_k) // hard drop
-        else if(sym == SDLK_v) // hard drop
+        else if(sym == binds.hd)
         {
           movepiece(p, 0, -1, true); // move down repeatedly
           p = nextpiece(p, qmeth);
