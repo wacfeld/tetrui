@@ -85,7 +85,7 @@ struct piece
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::array<SDL_Surface *, 9> sprites;
+std::array<SDL_Surface *, 10> sprites;
 
 const int MINO_LEN = 32;
 
