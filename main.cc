@@ -64,6 +64,14 @@ struct keybinds arr_wasd =
   .f  = SDLK_s
 };
 
+// properties that a clear can have
+struct clear
+{
+  int lines; // single, double, triple, quad (1, 2, 3, 4)
+  bool tspin;
+  bool pc; // perfect clear
+};
+
 // a piece is a type, a center of rotation, and 4 minoes
 struct piece
 {
@@ -335,6 +343,12 @@ void undrawpiece(struct piece &p)
     reboardmino(bX, bY, NONE, m[0], m[1]);
   }
 }
+
+// a twist is recognized (for any piece, not just T) if the piece cannot move left, right, or up
+// bool immobile(struct piece p)
+// {
+  
+// }
 
 // return false if out of bounds, or collides with existing mino
 bool goodcoords(int x, int y)
@@ -872,7 +886,7 @@ void drawqueue()
 }
 
 // returns true if piece touching ground
-bool grounded(struct piece &p)
+bool stuck(struct piece &p, int dx, int dy)
 {
   // save copy and then delete piece from board
   enum type saved[4];
@@ -889,7 +903,7 @@ bool grounded(struct piece &p)
   // inspect the cell just below every mino
   for(auto &m : p.p)
   {
-    if(!goodcoords(m[0], m[1]-1))
+    if(!goodcoords(m[0] + dx, m[1] + dy))
     {
       g = true;
     }
@@ -905,6 +919,11 @@ bool grounded(struct piece &p)
   }
 
   return g;
+}
+
+bool grounded(struct piece &p)
+{
+  return stuck(p, 0, -1);
 }
 
 void undrawghost(struct piece &p)
