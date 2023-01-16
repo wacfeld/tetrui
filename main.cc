@@ -77,6 +77,7 @@ struct piece
 {
   enum type t;
   enum rotstate r;
+  bool lastrot;
   // center of rotation coords may be in-between minoes (for I and O)
   // hence c[2] coords are stored as double their actual value
   std::array<int, 2> c;
@@ -343,12 +344,6 @@ void undrawpiece(struct piece &p)
     reboardmino(bX, bY, NONE, m[0], m[1]);
   }
 }
-
-// a twist is recognized (for any piece, not just T) if the piece cannot move left, right, or up
-// bool immobile(struct piece p)
-// {
-  
-// }
 
 // return false if out of bounds, or collides with existing mino
 bool goodcoords(int x, int y)
@@ -926,6 +921,43 @@ bool grounded(struct piece &p)
   return stuck(p, 0, -1);
 }
 
+// a twist is recognized (for any piece, not just T) if the piece cannot move down, left, right, or up
+// does not require rotation
+// line clear is not handlede here
+bool immobile(struct piece &p)
+{
+  // the 0,-1 case is equivalent to being grounded
+  return stuck(p, 1, 0) && stuck(p, -1, 0) && stuck(p, 0, -1) && stuck(p, 0, 1);
+}
+
+// if a T piece was rotated and has 3 full corners, a twist is recognized
+bool threecornerT(struct piece &p)
+{
+  if(p.t != T) return false;
+
+  if(p.lastrot == false) return false;
+
+  // get center coords
+  int x = p.c[0]/2;
+  int y = p.c[0]/2;
+
+  // check 4 corners
+  int corns = 0; // number of occupied corners
+  const static int offs[4][2] = {{1,1}, {1,-1}, {-1,1}, {-1,-1}};
+  for(int i = 0; i < 4; i++)
+  {
+    if(!goodcoords(x+offs[i][0], y+offs[i][1]))
+    {
+      corns++;
+    }
+  }
+
+  if(corns >= 3)
+    return true;
+
+  return false;
+}
+
 void undrawghost(struct piece &p)
 {
   for(auto &m : p.p)
@@ -1248,7 +1280,11 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
 }
 
 // set state variables for next turn
-#define nextturn() do {canhold = true; locking = false; lastgrav = curtime;} while(0)
+#define nextturn() do {\
+    canhold = true;\
+    locking = false;\
+    lastgrav = curtime;\
+  } while(0)
 
 int main(int argc, char **args)
 {
@@ -1380,6 +1416,7 @@ int main(int argc, char **args)
       {
         // spawn new piece, reset variables, and continue
         p = nextpiece(p, qmeth);
+        undrawghost(ghost);
         ghost = drawghost(p);
         SDL_UpdateWindowSurface(gwin);
 
@@ -1484,9 +1521,10 @@ int main(int argc, char **args)
         else if(sym == binds.hd)
         {
           movepiece(p, 0, -1, true); // move down repeatedly
+
           p = nextpiece(p, qmeth);
 
-          // update ghost
+          // update ghost for new piece
           undrawghost(ghost);
           ghost = drawghost(p);
 
@@ -1500,6 +1538,15 @@ int main(int argc, char **args)
         if(moved && locking)
         {
           lastreset = curtime;
+        }
+
+        // update whether last move was rotation or not
+        if(moved)
+        {
+          if(sym == binds.cw || sym == binds.ccw || sym == binds.f)
+            p.lastrot = true;
+          else
+            p.lastrot = false;
         }
 
         SDL_UpdateWindowSurface( gwin );
