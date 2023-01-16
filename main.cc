@@ -67,7 +67,7 @@ struct keybinds arr_wasd =
 // properties that a clear can have
 struct clear
 {
-  int lines; // single, double, triple, quad (1, 2, 3, 4)
+  int lines; // none, single, double, triple, quad (0, 1, 2, 3, 4)
   bool tspin;
   bool pc; // perfect clear
 };
@@ -204,6 +204,31 @@ void close()
 
   //Quit SDL subsystems
   SDL_Quit();
+}
+
+// print clear attributes to screen
+void putclear(struct clear &c)
+{
+  if(c.tspin)
+    fprintf(stderr, "tspin ");
+
+  if(c.lines == 0)
+    return;
+  else if(c.lines == 1)
+    fprintf(stderr, "single!");
+  else if(c.lines == 2)
+    fprintf(stderr, "double!");
+  else if(c.lines == 3)
+    fprintf(stderr, "triple!");
+  else if(c.lines == 4)
+    fprintf(stderr, "quad!");
+  else
+    error("c.lines is %d\n", c.lines);
+
+  if(c.pc)
+    printf(" perfect clear!");
+
+  putchar('\n');
 }
 
 SDL_Surface *loadBMP(const char *name)
@@ -1111,8 +1136,6 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
 // spawn next piece (using whatever selection process) and draw
 struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset))
 {
-  // TODO check for tetrises, tspins, etc.
-
   // check for line clears
   std::set<int, std::greater<int>> rows; // rows to clear
   // std::greater puts the ints in descending order, which makes clearing the lines easire later
@@ -1138,6 +1161,12 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset))
     }
   }
 
+  // calculate clear
+  struct clear cl = {0, false, false};
+  cl.lines = rows.size();
+  cl.tspin = immobile(old);
+  // cl.pc will be set after clears are executed
+
   // execute the clears & redraw
   // perhaps placing the column loop outside improves locality of reference
   for(int i = 0; i < tot_width; i++)
@@ -1157,6 +1186,16 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset))
       reboardmino(bX, bY, gboard[i][j], i, j);
     }
   }
+
+  // if bottom row empty, then perfect clear has occurred
+  bool pc = true;
+  for(int i = 0; i < tot_width; i++)
+  {
+    if(gboard[i][0] != NONE)
+      pc = false;
+  }
+  cl.pc = pc;
+  putclear(cl);
 
   // get next piece, spawn, draw, draw queue, and return
   enum type t = queuenext(qmeth);
