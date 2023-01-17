@@ -69,6 +69,7 @@ struct clear
 {
   int lines; // none, single, double, triple, quad (0, 1, 2, 3, 4)
   bool tspin;
+  bool mini; // whether tspin is mini or not (only for singles and doubles)
   bool pc; // perfect clear
 };
 
@@ -77,11 +78,22 @@ struct piece
 {
   enum type t;
   enum rotstate r;
+
   bool lastrot;
+  bool lastkick;
+
   // center of rotation coords may be in-between minoes (for I and O)
   // hence c[2] coords are stored as double their actual value
   std::array<int, 2> c;
   std::array<std::array<int, 2>, 4> p;
+
+  piece()
+  {
+    t = NONE;
+    rotstate = ZERO;
+    lastrot = false;
+    lastkick = false;
+  }
 };
 
 // struct winsurf
@@ -564,6 +576,12 @@ bool srs(struct piece &p, enum rot r)
       p.c[0] += 2 * off[0];
       p.c[1] += 2 * off[1];
 
+      // check if kick occurred
+      if(off[0] == 0 && off[1] == 0)
+        p.lastkick = false;
+      else
+        p.lastkick = true;
+
       return true;
     }
   }
@@ -982,6 +1000,29 @@ bool threecornerT(struct piece &p)
 
   return false;
 }
+
+// TODO implement tspin mini recognition
+// tspin mini
+// if a T piece is rotated & kicked into a tight space but can still move up, then it's a tspin mini
+// bool miniT(struct piece &p)
+// {
+//   if(p.t != T)
+//     return false;
+
+//   if(!p.lastrot)
+//     return false;
+
+//   if(!p.lastkick)
+//     return false;
+
+//   // grounded, stuck left and right, but not up
+//   if(stuck(p, -1, 0) && stuck(p, 1, 0) && stuck(p, 0, -1))
+//   {
+//     return true;
+//   }
+
+//   return false;
+// }
 
 void undrawghost(struct piece &p)
 {
