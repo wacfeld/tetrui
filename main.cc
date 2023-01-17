@@ -1,53 +1,7 @@
 // -*- mode: c++ -*-
 
-#include <SDL2/SDL.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
-#include <array>
-#include <time.h>
-#include <set>
-
-#define putd(x) do{ printf(#x ": %d\n", x); } while(0)
-
-// print error message to stderr & exit
-#define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); close(); exit(1); } while(0)
-
-typedef unsigned char uchar;
-typedef unsigned int uint;
-
-//Screen dimension constants
-// my screen is 1366x768
-
-// total (including buffer) and visible dimensions of board
-const int tot_height = 40;
-const int tot_width = 10;
-
-const int vis_height = 20;
-// const int vis_height = 23;
-
-const int vis_width = 10;
-
-// rotation directions
-enum rot {CW, FLIP, CCW}; // FLIP means 180
-
-// rotation states that a piece can be in
-enum rotstate {ZERO, RIGHT, LEFT, TWO};
-
-// NONE specifies that a square is empty
-enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9};
-
-struct keybinds
-{
-  SDL_Keycode hd; // hard drop
-  SDL_Keycode h; // hold
-  SDL_Keycode l; // move left
-  SDL_Keycode r; // move right
-  SDL_Keycode sd; // soft drop
-  SDL_Keycode ccw; // counterclockwise
-  SDL_Keycode cw; // clockwise
-  SDL_Keycode f; // 180
-};
+#include "defs.h"
+#include "drawer.h"
 
 // arrows move + WASD + shift + space
 struct keybinds arr_wasd =
@@ -64,86 +18,12 @@ struct keybinds arr_wasd =
   .f  = SDLK_s
 };
 
-// properties that a clear can have
-struct clear
-{
-  int lines; // none, single, double, triple, quad (0, 1, 2, 3, 4)
-  bool tspin;
-  bool mini; // whether tspin is mini or not (only for singles and doubles)
-  bool pc; // perfect clear
-};
-
-// a piece is a type, a center of rotation, and 4 minoes
-struct piece
-{
-  enum type t;
-  enum rotstate r;
-
-  bool lastrot;
-  bool lastkick;
-
-  // center of rotation coords may be in-between minoes (for I and O)
-  // hence c[2] coords are stored as double their actual value
-  std::array<int, 2> c;
-  std::array<std::array<int, 2>, 4> p;
-
-  piece()
-  {
-    t = NONE;
-    rotstate = ZERO;
-    lastrot = false;
-    lastkick = false;
-  }
-};
-
-// struct winsurf
-// {
-//   SDL_Window *win;
-//   SDL_Surface *surf;
-// };
-
-// struct winsurf ws = {NULL, NULL};
-
-SDL_Window *gwin;
-SDL_Surface *gsurf;
-std::array<SDL_Surface *, 10> sprites;
-
-const int MINO_LEN = 32;
-
-// hold area top-left corner
-const int hX = 0;
-const int hY = 0;
-const int hold_width = 6;
-const int hold_height = 20;
-
-// graphical board top-left corner
-const int bX = hX + MINO_LEN * hold_width;
-const int bY = 0;
-
-// queue (to the right of board)
-const int qX = bX + MINO_LEN * vis_width;
-const int qY = 0;
-const int queue_width = 6; // number of minoes
-const int queue_height = vis_height;
-const int queue_len = 5; // number of pieces to display
-const int queue_diff = 3; // number of minoes between pieces in hold
-
 // hold slot. NONE means empty (start of game)
 enum type ghold = NONE;
 
 // the queue, which is always full, determines what pieces come next
 // it itself is supplied using 7bag(), fullrand(), etc.
 enum type gqueue[queue_len];
-
-// bottom-left corner of top queue piece
-const int QCORN[] = {1,17};
-
-// bottom-left corner of hold piece
-const int HCORN[] = {1,17};
-
-// board is 10x20
-const int SCREEN_WIDTH = MINO_LEN*(hold_width + vis_width + queue_width);
-const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
 // spawn center for J, L, S, Z, T
 // (4, 20) doubled
@@ -185,10 +65,6 @@ enum type gboard[tot_width][tot_height+1];
 // guideline: there is a 10x20 buffer area above visible play area
 // the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
 
-// gscreen is kept synchronized with physical screen
-// reboardmino() consults this to see what needs updating
-enum type gscreen[tot_width][tot_height];
-
 // bool gchanged[tot_width][tot_height]; // keeps track of which things need changing
 
 enum state {PLAYING, LOST};
@@ -200,23 +76,6 @@ enum state gstate = PLAYING;
 //   gboard[x][y] = t;
 //   gchanged[x][y] = 1;
 // }
-
-/* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
-void close()
-{
-  SDL_DestroyWindow(gwin);
-  gwin = NULL;
-  gsurf = NULL;
-
-  for(SDL_Surface *s : sprites)
-  {
-    SDL_FreeSurface(s);
-    s = NULL;
-  }
-
-  //Quit SDL subsystems
-  SDL_Quit();
-}
 
 // print clear attributes to screen
 void putclear(struct clear &c)
@@ -241,46 +100,6 @@ void putclear(struct clear &c)
     printf(" perfect clear!");
 
   putchar('\n');
-}
-
-SDL_Surface *loadBMP(const char *name)
-{
-  SDL_Surface *bmp = SDL_LoadBMP(name);
-  if(!bmp)
-  {
-    error( "Unable to load image %s! SDL Error: %s\n", name, SDL_GetError());
-  }
-
-  SDL_Surface *opt = SDL_ConvertSurface( bmp, gsurf->format, 0 );
-  if( opt == NULL )
-  {
-    error( "Unable to optimize image %s! SDL Error: %s\n", name, SDL_GetError() );
-  }
-
-  SDL_FreeSurface( bmp );
-  // sprites.push_back(opt);
-  return opt;
-}
-
-void init(const char *title, int w, int h)
-{
-
-  //Initialize SDL
-  if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-  {
-    error( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-  }
-  else
-  {
-    //Create window
-    gwin = SDL_CreateWindow( title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_SHOWN );
-    if( gwin == NULL )
-    {
-      error( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
-    }
-
-    gsurf = SDL_GetWindowSurface( gwin );
-  }
 }
 
 // scale and place mino
