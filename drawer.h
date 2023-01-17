@@ -50,4 +50,22 @@ void close();
 SDL_Surface *loadBMP(const char *name);
 void init(const char *title, int w, int h);
 
+void blitmino(int X, int Y, enum type t, int col, int row);
+void boardmino(int X, int Y, enum type t, int col, int row);
+void reboardmino(int X, int Y, enum type t, int col, int row);
+void queuemino(int X, int Y, enum type t, int col, int row);
+void drawpiece(struct piece &p);
+void undrawpiece(struct piece &p);
+
+void initsprites();
+void initscreen();
+void wait(uint ms);
+void splash(enum type (*qmeth)(bool reset), uint d1, uint d2);
+
+
+
+
+
+
+
 #endif
