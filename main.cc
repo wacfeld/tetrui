@@ -149,10 +149,11 @@ int main(int argc, char **args)
   // - [X] trying to twist S into above setup sometimes deletes blocks
   // - [ ] key inputs are cancelling each other
 
-  // todo:
-  // - ghost piece
-  // - proper move reset
-  // - DAS/ARR
+  // todo list:
+  // DONE ghost piece
+  // TODO proper move reset
+  // TODO DAS/ARR
+  // TODO edit mode
 
 
   // grab first piece from queue, draw everything

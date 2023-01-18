@@ -88,19 +88,12 @@ bool threecornerT(struct piece &p)
 //   return false;
 // }
 
-int guidelinecombo()
+int guidelinecombo(struct clear &cl)
 {
-  
-}
+  const static combotable[13] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5};
+  const static int combotablelen = sizeof(combotable) / sizeof(*combotable);
+  const static int combomax = 5; // maxes out at 5
 
-int guidelinebtb()
-{
-  
-}
-
-// garbage is called on every lock down (even if nothing is cleared), so that it can keep track of combo
-int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(struct clear &))
-{
   static int combo = -1;
 
   if(cl.lines == 0) // nothing was cleared; reset combo & exit
@@ -109,6 +102,71 @@ int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(s
     return 0;
   }
 
+  // something was cleared; increment combo and calculate combo garbage
+  combo++;
+
+  if(combo < combotablelen)
+    return combotable[combo];
+  else
+    return combomax;
+}
+
+int guidelinebtb(struct clear &cl)
+{
+  static bool btb = false; // whether the last clear was a 'difficult clear'
+
+  int lines;
+
+  if(cl.lines == 0) // non-clears don't affect btb
+    return 0;
+
+  else if(cl.tspin && cl.mini) // any tspin mini -> +1
+  {
+    if(btb)
+      lines = 1;
+    btb = true;
+  }
+
+  else if(cl.tspin && cl.lines == 1) // tspin single -> +1
+  {
+    if(btb)
+      lines = 1;
+    btb = true;
+  }
+
+  else if(cl.tspin && cl.lines == 2) // tspin double -> +2
+  {
+    if(btb)
+      lines = 2;
+    btb = true;
+  }
+
+  else if(cl.lines == 4) // quad -> +2
+  {
+    if(btb)
+      lines = 2;
+    btb = true;
+  }
+
+  else if(cl.tspin && cl.lines == 3) // tspin triple -> +3
+  {
+    if(btb)
+      lines = 3;
+    btb = true;
+  }
+
+  else // non-difficult line clear, reset btb
+  {
+    lines = 0;
+    btb = false;
+  }
+
+  return lines;
+}
+
+// garbage is called on every lock down (even if nothing is cleared), so that it can keep track of combo
+int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(struct clear &))
+{
   int lines = 0;
 
   if(cl.pc) // perfect clear -> +10 lines
@@ -148,6 +206,12 @@ int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(s
         error("invalid tspin line count: %d\n", cl.lines);
     }
   }
+
+  // add combo garbage
+  lines += combometh(cl);
+
+  // add btb garbage
+  lines += combometh(cl);
 
   return lines;
 }
