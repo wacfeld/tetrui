@@ -124,7 +124,7 @@ int guidelinebtb(struct clear &cl)
     // putd(btb);
     return 0;
   }
-  
+
   else if(cl.tspin && cl.mini) // any tspin mini -> +1
   {
     if(gplayers[cur_player].btb)

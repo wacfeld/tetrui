@@ -23,10 +23,10 @@ bool topout(struct piece &p)
 }
 
 // run until told to quit by user, no other input is processed
-void lose()
+void lose(int pl)
 {
-  fprintf(stderr, "player %d has topped out!\n", cur_player);
-  gplayers[cur_player].lost = true;
+  fprintf(stderr, "player %d has lost!\n", pl);
+  gplayers[pl].lost = true;
 
   // SDL_Event e;
 
@@ -131,7 +131,7 @@ struct piece spawnpiece(enum type t)
   {
     // indicate lost and return
     // gstate = LOST;
-    lose();
+    lose(cur_player);
     // return p;
   }
 
@@ -178,7 +178,7 @@ enum type bag7(bool reset)
     gplayers[cur_player].siz = 0;
     return NONE; // return type doesn't matter
   }
-  
+
   // bag is empty
   if(gplayers[cur_player].siz == 0)
   {
@@ -261,6 +261,107 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
   return q;
 }
 
+// return index of next alive player (may be oneself)
+int nextalive(int pl)
+{
+  for(int i = (pl+1)%gmode; i != pl; i++, i %= gmode)
+  {
+    if(!gplayers[i].lost)
+    {
+      return i;
+    }
+  }
+
+  // self
+  return pl;
+}
+
+// give aligned or random garbage to current player
+void fill_garb(int lines, int aligned)
+{
+  int hole;
+
+  if(aligned)
+    hole = rand() % 10;
+
+  for(int i = 0; i < lines; i++)
+  {
+    if(!aligned)
+      hole = rand() % 10;
+
+    // check for top out
+    for(int j = 0; j < tot_width; j++)
+    {
+      // cell at the very top is occupied
+      if(gplayers[cur_player].board[j][tot_height-1] != NONE)
+      {
+        lose(cur_player);
+        return;
+      }
+
+      // move column up
+      memmove(&gplayers[cur_player].board[j][1], &gplayers[cur_player].board[j][0], sizeof(**gplayers[cur_player].board) * (tot_height-1));
+
+      // fill in garbage along bottom row
+      if(j == hole)
+        gplayers[cur_player].board[j][0] = NONE;
+      else
+        gplayers[cur_player].board[j][0] = GARB;
+
+      // redraw column
+      for(int k = 0; k < tot_height; k++)
+      {
+        reboardmino(bX, bY, gplayers[cur_player].board[j][k], j, k);
+      }
+    }
+  }
+}
+
+void proc_garb(struct clear &cl)
+{
+  // print out clear/garbage info
+  int garb = garbage(cl, guidelinecombo, guidelinebtb);
+  putclear(cl);
+  if(garb)
+  {
+    fprintf(stderr, " %d garbage sent/cancelled\n", garb);
+  }
+
+  // if we cleared, don't accept any garbage. send/cancel garbage if applicable
+  if(cl.lines)
+  {
+    // cancel if applicable
+    int g = min(garb, gplayers[cur_player].garb);
+    gplayers[cur_player].garb -= g;
+    garb -= g;
+
+    // if any garbage remaining, send it off
+    if(garb)
+    {
+      // next alive player (if only we are alive, this sends garbage to oneself)
+      int pl = nextalive(cur_player);
+      gplayers[pl].garb += garb;
+
+      // update their skull meter
+      skullmeter(pl, gplayers[pl].garb);
+    }
+  }
+
+  // if we didn't clear, accept pending garbage
+  else
+  {
+    // accept at most garb_batch lines
+    int g = min(garb_batch, gplayers[cur_player].garb);
+
+    gplayers[cur_player].garb -= g;
+
+    fill_garb(g, false);
+  }
+
+  // update skull meter
+  skullmeter(cur_player, gplayers[cur_player].garb);
+}
+
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
 struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (*tspinmeth)(struct piece &))
@@ -291,7 +392,7 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
   }
 
   // calculate clear
-  struct clear cl = {0, false, false};
+  struct clear cl;
   cl.lines = rows.size();
   cl.tspin = threecornerT(old);
   // cl.pc will be set after clears are executed
@@ -327,40 +428,17 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
 
 
   // if not singleplayer, handle garbage
-  // if(gmode != SINGLE)
-  // {
-  //   // print out clear/garbage info
-  //   int garb = garbage(cl, guidelinecombo, guidelinebtb);
-  //   putclear(cl);
-  //   if(garb)
-  //   {
-  //     fprintf(stderr, " %d garbage sent/cancelled\n", garb);
-  //   }
+  if(gmode != SINGLE)
+  {
+    proc_garb(cl);
+  }
 
-  //   // if we cleared, don't accept any garbage. send/cancel garbage if applicable
-  //   if(cl.lines)
-  //   {
-  //     int g = min(garb, 
-  //   }
-
-  //   // if we didn't clear, accept pending garbage
-  //   else
-  //   {
-  //     // accept at most garb_batch lines
-  //     int g = min(garb_batch, gplayers[cur_player].garb);
-
-  //     gplayers[cur_player].garb -= g;
-
-      
-  //   }
-  // }
-  
   // get next piece, spawn, draw, draw queue, and return
   enum type t = queuenext(qmeth);
   struct piece p = spawnpiece(t);
-  
+
   drawpiece(p);
   drawqueue();
-  
+
   return p;
 }

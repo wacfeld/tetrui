@@ -16,7 +16,7 @@
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 
 // print error message to stderr & exit
-#define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); close(); exit(1); } while(0)
+#define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); getchar();/*close(); exit(1);*/ } while(0)
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -40,7 +40,7 @@ enum rot {CW, FLIP, CCW}; // FLIP means 180
 enum rotstate {ZERO, RIGHT, LEFT, TWO};
 
 // NONE specifies that a square is empty
-enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9, GARB=10};
+enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9, GARB=10, SKULL=11};
 
 struct keybinds
 {
@@ -62,6 +62,14 @@ struct clear
   bool tspin;
   bool mini; // whether tspin is mini or not (only for singles and doubles)
   bool pc; // perfect clear
+
+  clear()
+  {
+    lines = 0;
+    tspin = false;
+    mini = false;
+    pc = false;
+  }
 };
 
 // a piece is a type, a center of rotation, and 4 minoes
@@ -105,7 +113,7 @@ struct player
   enum type queue[queue_len];
   enum type screen[tot_width][tot_height];
   enum type hold;
-  
+
   struct piece p;
   struct piece ghost;
 
@@ -126,7 +134,7 @@ struct player
   player()
   {
     lost = false;
-    
+
     // clear board
     for(int i = 0; i < tot_width; i++)
     {

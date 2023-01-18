@@ -9,7 +9,7 @@ const int vis_width = 10;
 
 extern SDL_Window *gwin;
 extern SDL_Surface *gsurf;
-extern std::array<SDL_Surface *, 11> sprites;
+extern std::array<SDL_Surface *, 12> sprites;
 
 const int MINO_LEN = 16;
 
@@ -73,5 +73,7 @@ void drawqueue();
 
 void undrawghost(struct piece &p);
 struct piece drawghost(struct piece &p);
+
+void skullmeter(int pl, int c);
 
 #endif

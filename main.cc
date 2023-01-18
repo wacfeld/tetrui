@@ -113,8 +113,8 @@ int main(int argc, char **args)
   // initialize players
   gplayers = new struct player[gmode];
 
-  // init RNG
-  // srand(time(NULL));
+  // general purpose random generator (e.x. for garbage holes)
+  srand(time(NULL));
 
   // seed all RNGs with the same seed
   {
@@ -124,7 +124,7 @@ int main(int argc, char **args)
       gplayers[i].gen.seed(t);
     }
   }
-  
+
   // initialize window
   init("tetrui", SCREEN_WIDTH, SCREEN_HEIGHT);
   SDL_FillRect( gsurf, NULL, SDL_MapRGB( gsurf->format, 0xFF, 0xFF, 0xFF ) );
@@ -146,7 +146,7 @@ int main(int argc, char **args)
 
   // reset queue
   // qmeth(true);
-  
+
   // abbreviation for convenience
   int &pl = cur_player;
 
@@ -159,7 +159,7 @@ int main(int argc, char **args)
     }
   }
   pl = 0;
-  
+
   // for(int i = 0; i < 10; i++)
   // {
   //   boardmino(bX, bY, I, i, 0);
@@ -200,7 +200,7 @@ int main(int argc, char **args)
     gplayers[pl].ghost = drawghost(gplayers[pl].p);
   }
   pl = 0;
-  
+
   // boardmino(bX, bY, GHOST, 0, 0);
 
   SDL_UpdateWindowSurface( gwin );
@@ -297,7 +297,7 @@ int main(int argc, char **args)
       }
     }
     pl = 0;
-    
+
     pl = cont_player;
     while( SDL_PollEvent( &e ) != 0 )
     {

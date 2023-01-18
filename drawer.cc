@@ -3,7 +3,7 @@
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::array<SDL_Surface *, 11> sprites;
+std::array<SDL_Surface *, 12> sprites;
 
 // enum type gscreen[tot_width][tot_height];
 
@@ -177,6 +177,7 @@ void initsprites()
   SDL_Surface *qbgspr = loadBMP("sprites/qbg.bmp"); // queue background
   SDL_Surface *gspr = loadBMP("sprites/ghost.bmp"); // ghost piece
   SDL_Surface *garbspr = loadBMP("sprites/garbage.bmp"); // garbage piece
+  SDL_Surface *skullspr = loadBMP("sprites/skull.bmp"); // skull
 
   sprites[NONE] = bgspr;
   sprites[I] = ispr;
@@ -189,6 +190,7 @@ void initsprites()
   sprites[GHOST] = gspr;
   sprites[QBG] = qbgspr;
   sprites[GARB] = garbspr;
+  sprites[SKULL] = skullspr;
 }
 
 void initscreen()
@@ -258,7 +260,7 @@ void wait(uint ms)
       break;
     }
   }
-  
+
 }
 
 void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
@@ -270,12 +272,14 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
       for(cur_player = 0; cur_player < gmode; cur_player++)
       {
         boardmino(bX, bY, qmeth(false), i, cur_player%2 ? j : vis_height-1-j);
+        blitmino(playerX(cur_player)-MINO_LEN, 0, SKULL, 0, !cur_player%2 ? j : vis_height-1-j);
       }
     }
     SDL_UpdateWindowSurface( gwin );
     wait(d1);
   }
 
+  // getchar();
   wait(d2);
 
   for(int j = 0; j < vis_height; j++)
@@ -285,6 +289,7 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
       for(cur_player = 0; cur_player < gmode; cur_player++)
       {
         boardmino(bX, bY, NONE, i, cur_player%2 ? j : vis_height-1-j);
+        blitmino(playerX(cur_player)-MINO_LEN, 0, NONE, 0, !cur_player%2 ? j : vis_height-1-j);
       }
     }
     SDL_UpdateWindowSurface( gwin );
@@ -296,7 +301,7 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
   {
     qmeth(true);
   }
-  
+
   cur_player = 0;
   wait(d2);
 }
@@ -321,7 +326,7 @@ void drawholdpiece(enum type t)
   }
 }
 
-// place a whole piece 
+// place a whole piece
 void drawqueuepiece(int place, enum type t)
 {
   // place: 0 is next piece, 1 is next-next, etc.
@@ -411,4 +416,19 @@ struct piece drawghost(struct piece &p)
 
   // return for later undrawing
   return q;
+}
+
+void skullmeter(int pl, int c)
+{
+  for(int i = 0; i < vis_height; i++)
+  {
+    if(i < c)
+    {
+      blitmino(playerX(pl)-MINO_LEN, 0, SKULL, 0, vis_height-1-i);
+    }
+    else
+    {
+      blitmino(playerX(pl)-MINO_LEN, 0, NONE, 0, vis_height-1-i);
+    }
+  }
 }
