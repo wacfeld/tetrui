@@ -19,11 +19,11 @@ make
 ** controls
 controls are hardcoded. you will have to edit the source and recompile to change them.
 
-- left :: =o=
-- right :: =]=
-- soft drop :: =w=
-- hard drop :: =v=
-- CCW :: =w=
-- CW :: =r=
-- 180 :: =e=
-- hold :: =a=
+- left :: =left=
+- right :: =right=
+- soft drop :: =down=
+- hard drop :: =space=
+- CCW :: =a=
+- CW :: =d=
+- 180 :: =s=
+- hold :: =lshift=
