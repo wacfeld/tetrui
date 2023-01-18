@@ -89,8 +89,10 @@ const int queue_len = 5; // number of pieces to display
 
 extern enum type gboard[tot_width][tot_height+1];
 extern enum type gqueue[queue_len];
+extern enum type ghold;
 
 struct piece placepiece(int x, int y, enum type t);
 
+bool stuck(struct piece &p, int dx, int dy);
 bool grounded(struct piece &p);
 #endif
