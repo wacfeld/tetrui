@@ -87,3 +87,67 @@ bool threecornerT(struct piece &p)
 
 //   return false;
 // }
+
+int guidelinecombo()
+{
+  
+}
+
+int guidelinebtb()
+{
+  
+}
+
+// garbage is called on every lock down (even if nothing is cleared), so that it can keep track of combo
+int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(struct clear &))
+{
+  static int combo = -1;
+
+  if(cl.lines == 0) // nothing was cleared; reset combo & exit
+  {
+    combo = -1;
+    return 0;
+  }
+
+  int lines = 0;
+
+  if(cl.pc) // perfect clear -> +10 lines
+    lines += 10;
+
+  // no tspin
+  if(!cl.tspin)
+  {
+    if(cl.lines == 1) // single -> 0
+      ;
+    else if(cl.lines == 2) // double -> 1
+      lines += 1;
+    else if(cl.lines == 3) // triple -> 2
+      lines += 2;
+    else if(cl.lines == 4) // quad -> 4
+      lines += 4;
+    else
+      error("invalid line count: %d\n", cl.lines);
+  }
+
+  // tspin
+  else
+  {
+    if(cl.mini)
+    {
+      fprintf(stderr, "tspin mini has not been implemented yet\n");
+    }
+    else
+    {
+      if(cl.lines == 1) // tspin single -> 2
+        lines += 2;
+      else if(cl.lines == 2) // tspin double -> 4
+        lines += 4;
+      else if(cl.lines == 3) // tspin triple -> 6
+        lines += 6;
+      else
+        error("invalid tspin line count: %d\n", cl.lines);
+    }
+  }
+
+  return lines;
+}
