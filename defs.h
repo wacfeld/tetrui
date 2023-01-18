@@ -100,13 +100,18 @@ struct player
   enum type screen[tot_width][tot_height];
   enum type hold;
 
-  // random number generator for queue (all generators get seeded with the same seed so queues are identical)
-  std::mt19937 gen;
   
   struct piece p;
   struct piece ghost;
+
   enum type *bag;
   int siz;
+  std::mt19937 gen; // random number generator for queue (all generators get seeded with the same seed so queues are identical)
+
+  uint lastgrav;
+  uint lastreset;
+  bool locking;
+  bool canhold;
 
   player()
   {
@@ -136,6 +141,11 @@ struct player
 
     bag = NULL;
     siz = 0;
+
+    lastgrav = 0;
+    lastreset = 0;
+    locking = false;
+    canhold = true;
   }
 };
 

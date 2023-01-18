@@ -98,9 +98,9 @@ bool grounded(struct piece &p)
 
 // set state variables for next turn
 #define nextturn() do {\
-    canhold = true;\
-    locking = false;\
-    lastgrav = curtime;\
+    gplayers[pl].canhold = true;\
+    gplayers[pl].locking = false;\
+    gplayers[pl].lastgrav = curtime;\
   } while(0)
 
 int main(int argc, char **args)
@@ -181,7 +181,7 @@ int main(int argc, char **args)
   // TODO proper move reset
   // TODO DAS/ARR
   // TODO edit mode
-  // sync queues
+  // DONE sync queues
 
 
   for(pl = 0; pl < gmode; pl++)
@@ -205,7 +205,13 @@ int main(int argc, char **args)
   // start the game
 
   // gravity
-  uint lastgrav = SDL_GetTicks(); // time of last gravity tick
+  // uint lastgrav = SDL_GetTicks(); // time of last gravity tick
+  for(pl = 0; pl < gmode; pl++)
+  {
+    gplayers[pl].lastgrav = SDL_GetTicks();
+  }
+  pl = 0;
+
   uint gravdelay = 1000; // ms between gravity ticks
   uint curtime; // current time in ms
   bool dograv = true;
@@ -213,69 +219,77 @@ int main(int argc, char **args)
   // lock down
   // int movecount = 0;
   uint lockdelay = 500; // ms before piece locks
-  uint lastreset = 0; // when locktimer >= lockdelay, piece locks
-  bool locking = false; // becomes true whenever piece is touching the ground
+  // uint lastreset = 0; // when locktimer >= lockdelay, piece locks
+  // bool locking = false; // becomes true whenever piece is touching the ground
   bool doground = true;
 
   // after hold is used once, set to false until lock down
-  bool canhold = true;
+  // bool canhold = true;
 
   bool quit = false;
   SDL_Event e;
+
+  // different from cur_player. player who is currently being controlled by keyboard
+  int cont_player = 0;
 
   while(!quit)
   {
     // update time
     curtime = SDL_GetTicks();
 
-    // check gravity timing
-    if(curtime - lastgrav >= gravdelay && dograv)
+    for(pl = 0; pl < gmode; pl++)
     {
-      // update timer
-      lastgrav = curtime;
-
-      // move down once
-      movepiece(gplayers[pl].p, 0, -1, 0);
-
-      // update screen
-      SDL_UpdateWindowSurface( gwin );
-    }
-
-    // if touching the ground, check for lockdown
-    if(grounded(gplayers[pl].p) && doground)
-    {
-      // currently infinity
-      // TODO change to move reset
-
-      if(!locking) // start timer
+// check gravity timing
+      if(curtime - gplayers[pl].lastgrav >= gravdelay && dograv)
       {
-      // puts("grounded");
-        locking = true;
-        lastreset = curtime;
+        // update timer
+        gplayers[pl].lastgrav = curtime;
+
+        // move down once
+        movepiece(gplayers[pl].p, 0, -1, 0);
+
+        // update screen
+        SDL_UpdateWindowSurface( gwin );
       }
 
-      // timer exceeded lock delay, lock down
-      if(curtime - lastreset >= lockdelay)
+      // if touching the ground, check for lockdown
+      if(grounded(gplayers[pl].p) && doground)
       {
-        // spawn new piece, reset variables, and continue
-        gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
-        undrawghost(gplayers[pl].ghost);
-        gplayers[pl].ghost = drawghost(gplayers[pl].p);
-        SDL_UpdateWindowSurface(gwin);
+        // currently infinity
+        // TODO change to move reset
 
-        nextturn();
-        // canhold = true;
-        // locking = false;
-        // lastgrav = curtime;
+        if(!gplayers[pl].locking) // start timer
+        {
+          // puts("grounded");
+          gplayers[pl].locking = true;
+          gplayers[pl].lastreset = curtime;
+        }
 
-        continue;
+        // timer exceeded lock delay, lock down
+        if(curtime - gplayers[pl].lastreset >= lockdelay)
+        {
+          // spawn new piece, reset variables, and continue
+          gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
+          SDL_UpdateWindowSurface(gwin);
+
+          nextturn();
+          // canhold = true;
+          // locking = false;
+          // lastgrav = curtime;
+
+          continue;
+        }
+      }
+      else
+      {
+        gplayers[pl].locking = false;
       }
     }
-    else
-    {
-      locking = false;
-    }
-
+    pl = 0;
+    
+    pl = cont_player;
     while( SDL_PollEvent( &e ) != 0 )
     {
       //User requests quit
@@ -334,7 +348,7 @@ int main(int argc, char **args)
 
         else if(sym == binds.h)
         {
-          if(canhold)
+          if(gplayers[pl].canhold)
           {
             // perform hold
             gplayers[pl].p = swaphold(gplayers[pl].p, qmeth);
@@ -351,7 +365,7 @@ int main(int argc, char **args)
 
             // reset state variables
             nextturn();
-            canhold = false; // but don't reset this one
+            gplayers[pl].canhold = false; // but don't reset this one
 
             continue;
           }
@@ -378,9 +392,9 @@ int main(int argc, char **args)
         }
 
         // reset lock timer
-        if(moved && locking)
+        if(moved && gplayers[pl].locking)
         {
-          lastreset = curtime;
+          gplayers[pl].lastreset = curtime;
         }
 
         // update whether last move was rotation or not
