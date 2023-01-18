@@ -242,6 +242,10 @@ int main(int argc, char **args)
 
     for(pl = 0; pl < gmode; pl++)
     {
+      // skip lost players
+      if(gplayers[pl].lost)
+        continue;
+
 // check gravity timing
       if(curtime - gplayers[pl].lastgrav >= gravdelay && dograv)
       {
@@ -326,6 +330,10 @@ int main(int argc, char **args)
 
           continue;
         }
+
+        // skip lost players
+        if(gplayers[pl].lost)
+          continue;
 
         bool moved = false;
 

@@ -25,7 +25,7 @@ void putclear(struct clear &c)
   if(c.pc)
     printf(" perfect clear!");
 
-  putchar('\n');
+  // putchar('\n');
 }
 
 // a twist is recognized (for any piece, not just T) if the piece cannot move down, left, right, or up
@@ -99,14 +99,14 @@ int guidelinecombo(struct clear &cl)
   if(cl.lines == 0) // nothing was cleared; reset combo & exit
   {
     combo = -1;
-    putd(combo);
+    // putd(combo);
     return 0;
   }
 
   // something was cleared; increment combo and calculate combo garbage
   combo++;
 
-  putd(combo);
+  // putd(combo);
   if(combo < combotablelen)
     return combotable[combo];
   else
@@ -121,7 +121,7 @@ int guidelinebtb(struct clear &cl)
 
   if(cl.lines == 0) // non-clears don't affect btb
   {
-    putd(btb);
+    // putd(btb);
     return 0;
   }
   
@@ -166,7 +166,7 @@ int guidelinebtb(struct clear &cl)
     btb = false;
   }
 
-  putd(btb);
+  // putd(btb);
   return lines;
 }
 

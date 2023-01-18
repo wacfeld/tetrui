@@ -25,23 +25,24 @@ bool topout(struct piece &p)
 // run until told to quit by user, no other input is processed
 void lose()
 {
-  fprintf(stderr, "game over\n");
+  fprintf(stderr, "player %d has topped out!\n", cur_player);
+  gplayers[cur_player].lost = true;
 
-  SDL_Event e;
+  // SDL_Event e;
 
-  while(1)
-  {
-    while( SDL_PollEvent( &e ) != 0 )
-    {
-      //User requests quit
-      if( e.type == SDL_QUIT )
-      {
-        close();
-        fprintf(stderr, "quitting\n");
-        exit(0);
-      }
-    }
-  }
+  // while(1)
+  // {
+  //   while( SDL_PollEvent( &e ) != 0 )
+  //   {
+  //     //User requests quit
+  //     if( e.type == SDL_QUIT )
+  //     {
+  //       close();
+  //       fprintf(stderr, "quitting\n");
+  //       exit(0);
+  //     }
+  //   }
+  // }
 }
 
 // given top-left coords, return piece with correct type and mino/center coords
@@ -327,11 +328,13 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
   }
   cl.pc = pc;
 
-  putchar('\n');
+  int garb = garbage(cl, guidelinecombo, guidelinebtb);
   putclear(cl);
-  fprintf(stderr, "%d garbage sent\n", garbage(cl, guidelinecombo, guidelinebtb));
-  putchar('\n');
-
+  if(garb)
+  {
+    fprintf(stderr, " %d garbage sent\n", garb);
+  }
+  
   // get next piece, spawn, draw, draw queue, and return
   enum type t = queuenext(qmeth);
   struct piece p = spawnpiece(t);

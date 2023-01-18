@@ -96,11 +96,12 @@ const int queue_len = 5; // number of pieces to display
 
 struct player
 {
+  bool lost;
+
   enum type board[tot_width][tot_height+1];
   enum type queue[queue_len];
   enum type screen[tot_width][tot_height];
   enum type hold;
-
   
   struct piece p;
   struct piece ghost;
@@ -116,6 +117,8 @@ struct player
 
   player()
   {
+    lost = false;
+    
     // clear board
     for(int i = 0; i < tot_width; i++)
     {
