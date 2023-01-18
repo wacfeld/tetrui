@@ -251,69 +251,6 @@ struct piece spawnpiece(enum type t)
   return p;
 }
 
-void drawholdpiece(enum type t)
-{
-  struct piece p = placepiece(HCORN[0], HCORN[1], t);
-
-  // draw blanks
-  for(int i = 0; i < 4; i++)
-  {
-    for(int j = 0; j < 2; j++)
-    {
-      queuemino(hX, hY, QBG, HCORN[0]+i, HCORN[1]+j);
-    }
-  }
-
-  // draw minoes
-  for(auto &m : p.p)
-  {
-    queuemino(hX, hY, t, m[0], m[1]);
-  }
-}
-
-// place a whole piece 
-void drawqueuepiece(int place, enum type t)
-{
-  // place: 0 is next piece, 1 is next-next, etc.
-  // used to calculate where to place minoes
-
-  if(place >= queue_len || place < 0)
-  {
-    fprintf(stderr, "queue placement: %d is not between [1, %d]\n", place+1, queue_len);
-  }
-
-  // calculate coords of bottom-left
-  int x = QCORN[0]; // always aligned to the left
-  int y = QCORN[1] - place * queue_diff; // moves down as place increases
-
-  // get coords
-  struct piece p = placepiece(x, y, t);
-
-  // draw blanks over the 4x2 area
-  for(int i = 0; i < 4; i++)
-  {
-    for(int j = 0; j < 2; j++)
-    {
-      queuemino(qX, qY, QBG, x+i, y+j);
-    }
-  }
-
-  // draw minoes
-  for(auto &m : p.p)
-  {
-    queuemino(qX, qY, t, m[0], m[1]);
-  }
-}
-
-// draw the entire queue
-void drawqueue()
-{
-  for(int i = 0; i < queue_len; i++)
-  {
-    drawqueuepiece(i, gqueue[i]);
-  }
-}
-
 // returns true if piece touching ground
 bool stuck(struct piece &p, int dx, int dy)
 {

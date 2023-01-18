@@ -63,6 +63,9 @@ void wait(uint ms);
 void splash(enum type (*qmeth)(bool reset), uint d1, uint d2);
 
 
+void drawholdpiece(enum type t);
+void drawqueuepiece(int place, enum type t);
+void drawqueue();
 
 
 

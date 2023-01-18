@@ -88,4 +88,7 @@ struct piece
 const int queue_len = 5; // number of pieces to display
 
 extern enum type gboard[tot_width][tot_height+1];
+extern enum type gqueue[queue_len];
+
+struct piece placepiece(int x, int y, enum type t);
 #endif
