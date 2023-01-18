@@ -22,6 +22,8 @@ struct keybinds arr_wasd =
   .f  = SDLK_s
 };
 
+enum mode gmode = VERSUS;
+
 // hold slot. NONE means empty (start of game)
 enum type ghold = NONE;
 

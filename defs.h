@@ -24,6 +24,9 @@ typedef unsigned int uint;
 const int tot_height = 40;
 const int tot_width = 10;
 
+enum mode {SINGLE, VERSUS};
+exturn enum mode gmode = VERSUS;
+
 // rotation directions
 enum rot {CW, FLIP, CCW}; // FLIP means 180
 

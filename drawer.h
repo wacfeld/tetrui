@@ -11,7 +11,7 @@ extern SDL_Window *gwin;
 extern SDL_Surface *gsurf;
 extern std::array<SDL_Surface *, 10> sprites;
 
-const int MINO_LEN = 32;
+const int MINO_LEN = 16;
 
 // hold area top-left corner
 const int hX = 0;
