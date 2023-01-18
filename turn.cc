@@ -23,9 +23,9 @@ bool topout(struct piece &p)
 }
 
 // run until told to quit by user, no other input is processed
-void lose(int pl)
+void lose(int pl, bool topout)
 {
-  fprintf(stderr, "player %d has lost!\n", pl);
+  fprintf(stderr, "player %d has lost! cause of death was %s\n", pl, topout ? "topout" : "buffer exceeded");
   gplayers[pl].lost = true;
 
   // SDL_Event e;
@@ -131,7 +131,7 @@ struct piece spawnpiece(enum type t)
   {
     // indicate lost and return
     // gstate = LOST;
-    lose(cur_player);
+    lose(cur_player, true);
     // return p;
   }
 
@@ -295,7 +295,7 @@ void fill_garb(int lines, int aligned)
       // cell at the very top is occupied
       if(gplayers[cur_player].board[j][tot_height-1] != NONE)
       {
-        lose(cur_player);
+        lose(cur_player, false);
         return;
       }
 
