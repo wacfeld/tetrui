@@ -25,7 +25,7 @@ const int tot_height = 40;
 const int tot_width = 10;
 
 enum mode {SINGLE, VERSUS};
-exturn enum mode gmode = VERSUS;
+extern enum mode gmode;
 
 // rotation directions
 enum rot {CW, FLIP, CCW}; // FLIP means 180
@@ -89,6 +89,33 @@ struct piece
 // struct winsurf ws = {NULL, NULL};
 
 const int queue_len = 5; // number of pieces to display
+
+struct player
+{
+  enum type board[tot_width][tot_height+1];
+  enum type queue[queue_len];
+  enum type *bag;
+
+  player()
+  {
+    // clear board
+    for(int i = 0; i < tot_width; i++)
+    {
+      for(int j = 0; j < tot_height; j++)
+      {
+        board[i][j] = NONE;
+      }
+    }
+
+    // clear queue
+    for(int i = 0; i < queue_len; i++)
+    {
+      queue[i] = NONE;
+    }
+
+    bag = NULL;
+  }
+};
 
 extern enum type gboard[tot_width][tot_height+1];
 extern enum type gqueue[queue_len];
