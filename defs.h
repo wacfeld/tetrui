@@ -41,6 +41,7 @@ enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9};
 
 struct keybinds
 {
+  SDL_Keycode cmd; // command
   SDL_Keycode hd; // hard drop
   SDL_Keycode h; // hold
   SDL_Keycode l; // move left

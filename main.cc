@@ -10,6 +10,9 @@
 // arrows move + WASD + shift + space
 struct keybinds arr_wasd =
 {
+  // keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
+  .cmd = SDLK_SLASH,
+
   .hd = SDLK_SPACE,
   .h  = SDLK_LSHIFT,
 
@@ -303,6 +306,26 @@ int main(int argc, char **args)
       {
         // keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
         auto sym = e.key.keysym.sym;
+
+        // enter a command
+        if(sym == binds.cmd)
+        {
+          char cmd[1000];
+          fprintf(stderr, "> ");
+          fgets(cmd, 1000, stdin);
+
+          // remove trailing newline
+          cmd[strlen(cmd)-1] = 0;
+
+          if(!strcmp(cmd, "next"))
+          {
+            cont_player++;
+            cont_player %= gmode;
+            fprintf(stderr, "now controlling player %d\n", cont_player);
+          }
+
+          continue;
+        }
 
         bool moved = false;
 
