@@ -24,7 +24,7 @@ struct keybinds arr_wasd =
 
 enum mode gmode = VERSUS;
 
-std::vector<struct player> gplayers;
+struct player *gplayers = NULL;
 int cur_player = 0; // index of current player
 
 // hold slot. NONE means empty (start of game)
@@ -102,6 +102,16 @@ bool grounded(struct piece &p)
 
 int main(int argc, char **args)
 {
+  // initialized players
+  if(gmode == VERSUS)
+  {
+    gplayers = new struct player [2];
+  }
+  else
+  {
+    gplayers = new struct player [1];
+  }
+
   // init RNG
   srand(time(NULL));
 

@@ -118,7 +118,7 @@ struct player
   }
 };
 
-extern std::vector<struct player> players;
+extern struct player *gplayers;
 extern int cur_player;
 
 /* extern enum type gboard[tot_width][tot_height+1]; */

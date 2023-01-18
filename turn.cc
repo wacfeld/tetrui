@@ -209,16 +209,16 @@ enum type fullrand()
 enum type queuenext(enum type (*qmeth)(bool reset))
 {
   // grab next piece type
-  enum type next = gplayer[cur_player].queue[0];
+  enum type next = gplayers[cur_player].queue[0];
 
   // shift rest of queue forward
   for(int i = 0; i < queue_len - 1; i++)
   {
-    gplayer[cur_player].queue[i] = gplayer[cur_player].queue[i+1];
+    gplayers[cur_player].queue[i] = gplayers[cur_player].queue[i+1];
   }
 
   // put new piece at back of queue using given method
-  gplayer[cur_player].queue[queue_len - 1] = qmeth(false);
+  gplayers[cur_player].queue[queue_len - 1] = qmeth(false);
 
   return next;
 }
@@ -227,15 +227,15 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
 {
   enum type t; // type of new piece
 
-  if(gplayer[cur_player].hold == NONE) // empty hold, grab from queue
+  if(gplayers[cur_player].hold == NONE) // empty hold, grab from queue
   {
     t = queuenext(qmeth);
-    gplayer[cur_player].hold = p.t;
+    gplayers[cur_player].hold = p.t;
   }
   else // swap with hold
   {
-    t = gplayer[cur_player].hold;
-    gplayer[cur_player].hold = p.t;
+    t = gplayers[cur_player].hold;
+    gplayers[cur_player].hold = p.t;
   }
 
   // delete old piece and undraw
