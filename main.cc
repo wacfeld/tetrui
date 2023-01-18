@@ -111,6 +111,7 @@ int main(int argc, char **args)
   initscreen();
 
   enum type (*qmeth)(bool reset) = bag7;
+  bool (*tspinmeth)(struct piece &) = threecornerT;
 
   bool dosplash = true;
   if(dosplash)
@@ -224,7 +225,7 @@ int main(int argc, char **args)
       if(curtime - lastreset >= lockdelay)
       {
         // spawn new piece, reset variables, and continue
-        p = nextpiece(p, qmeth);
+        p = nextpiece(p, qmeth, tspinmeth);
         undrawghost(ghost);
         ghost = drawghost(p);
         SDL_UpdateWindowSurface(gwin);
@@ -331,7 +332,7 @@ int main(int argc, char **args)
         {
           movepiece(p, 0, -1, true); // move down repeatedly
 
-          p = nextpiece(p, qmeth);
+          p = nextpiece(p, qmeth, tspinmeth);
 
           // update ghost for new piece
           undrawghost(ghost);

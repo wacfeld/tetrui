@@ -252,7 +252,7 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
 
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
-struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset))
+struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (*tspinmeth)(struct piece &))
 {
   // check for line clears
   std::set<int, std::greater<int>> rows; // rows to clear
