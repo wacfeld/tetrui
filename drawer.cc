@@ -336,3 +336,52 @@ void drawqueue()
     drawqueuepiece(i, gqueue[i]);
   }
 }
+
+void undrawghost(struct piece &p)
+{
+  for(auto &m : p.p)
+  {
+    boardmino(bX, bY, gboard[m[0]][m[1]], m[0], m[1]);
+  }
+}
+
+// given current piece, draw a ghost piece for it
+struct piece drawghost(struct piece &p)
+{
+  // make copy
+  struct piece q = p;
+
+  // delete piece from board temporarily
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = NONE;
+  }
+
+  // move the copy down until it's grounded
+  while(!grounded(q))
+  {
+    // decrement all y coords
+    for(auto &m : q.p)
+    {
+      m[1]--;
+    }
+  }
+
+  // replace piece on board
+  for(auto &m : p.p)
+  {
+    gboard[m[0]][m[1]] = p.t;
+  }
+
+  // draw ghost piece wherever not occupied already
+  for(auto &m : q.p)
+  {
+    if(gboard[m[0]][m[1]] == NONE)
+    {
+      boardmino(bX, bY, GHOST, m[0], m[1]);
+    }
+  }
+
+  // return for later undrawing
+  return q;
+}

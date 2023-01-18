@@ -67,8 +67,7 @@ void drawholdpiece(enum type t);
 void drawqueuepiece(int place, enum type t);
 void drawqueue();
 
-
-
-
+void undrawghost(struct piece &p);
+struct piece drawghost(struct piece &p);
 
 #endif

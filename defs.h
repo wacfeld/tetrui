@@ -91,4 +91,6 @@ extern enum type gboard[tot_width][tot_height+1];
 extern enum type gqueue[queue_len];
 
 struct piece placepiece(int x, int y, enum type t);
+
+bool grounded(struct piece &p);
 #endif
