@@ -291,6 +291,12 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
     SDL_UpdateWindowSurface( gwin );
     wait(d1);
   }
+
+  // reset queues
+  for(cur_player = 0; cur_player < gmode; cur_player++)
+  {
+    qmeth(true);
+  }
   
   cur_player = 0;
   wait(d2);

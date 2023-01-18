@@ -22,6 +22,9 @@ struct keybinds arr_wasd =
   .f  = SDLK_s
 };
 
+// random number generator distribution
+std::uniform_int_distribution<int> dist(0,6);
+
 enum mode gmode = VERSUS;
 
 struct player *gplayers = NULL;
@@ -106,8 +109,17 @@ int main(int argc, char **args)
   gplayers = new struct player[gmode];
 
   // init RNG
-  srand(time(NULL));
+  // srand(time(NULL));
 
+  // seed all RNGs with the same seed
+  {
+    auto t = time(NULL);
+    for(int i = 0; i < gmode; i++)
+    {
+      gplayers[i].gen.seed(t);
+    }
+  }
+  
   // initialize window
   init("tetrui", SCREEN_WIDTH, SCREEN_HEIGHT);
   SDL_FillRect( gsurf, NULL, SDL_MapRGB( gsurf->format, 0xFF, 0xFF, 0xFF ) );
@@ -128,14 +140,21 @@ int main(int argc, char **args)
   }
 
   // reset queue
-  qmeth(true);
+  // qmeth(true);
   
-  // fill & draw the queue
-  for(int i = 0; i < queue_len; i++)
-  {
-    gplayers[cur_player].queue[i] = qmeth(false);
-  }
+  // abbreviation for convenience
+  int &pl = cur_player;
 
+  // fill & draw the queue
+  for(pl = 0; pl < gmode; pl++)
+  {
+    for(int i = 0; i < queue_len; i++)
+    {
+      gplayers[pl].queue[i] = qmeth(false);
+    }
+  }
+  pl = 0;
+  
   // for(int i = 0; i < 10; i++)
   // {
   //   boardmino(bX, bY, I, i, 0);
@@ -165,14 +184,18 @@ int main(int argc, char **args)
   // sync queues
 
 
-  // grab first piece from queue, draw everything
-  enum type t = queuenext(qmeth);
-  struct piece p = spawnpiece(t);
-  drawpiece(p);
-  drawqueue();
+  for(pl = 0; pl < gmode; pl++)
+  {
+    // grab first piece from queue, draw everything
+    enum type t = queuenext(qmeth);
+    gplayers[pl].p = spawnpiece(t);
+    drawpiece(gplayers[pl].p);
+    drawqueue();
 
-  struct piece ghost = drawghost(p);
-
+    gplayers[pl].ghost = drawghost(gplayers[pl].p);
+  }
+  pl = 0;
+  
   // boardmino(bX, bY, GHOST, 0, 0);
 
   SDL_UpdateWindowSurface( gwin );
@@ -212,14 +235,14 @@ int main(int argc, char **args)
       lastgrav = curtime;
 
       // move down once
-      movepiece(p, 0, -1, 0);
+      movepiece(gplayers[pl].p, 0, -1, 0);
 
       // update screen
       SDL_UpdateWindowSurface( gwin );
     }
 
     // if touching the ground, check for lockdown
-    if(grounded(p) && doground)
+    if(grounded(gplayers[pl].p) && doground)
     {
       // currently infinity
       // TODO change to move reset
@@ -235,9 +258,9 @@ int main(int argc, char **args)
       if(curtime - lastreset >= lockdelay)
       {
         // spawn new piece, reset variables, and continue
-        p = nextpiece(p, qmeth, tspinmeth);
-        undrawghost(ghost);
-        ghost = drawghost(p);
+        gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
+        undrawghost(gplayers[pl].ghost);
+        gplayers[pl].ghost = drawghost(gplayers[pl].p);
         SDL_UpdateWindowSurface(gwin);
 
         nextturn();
@@ -276,37 +299,37 @@ int main(int argc, char **args)
         // }
         if(sym == binds.sd)
         {
-          moved = movepiece(p, 0, -1, 0);
+          moved = movepiece(gplayers[pl].p, 0, -1, 0);
         }
         else if(sym == binds.l)
         {
-          moved = movepiece(p, -1, 0, 0);
-          undrawghost(ghost);
-          ghost = drawghost(p);
+          moved = movepiece(gplayers[pl].p, -1, 0, 0);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.r)
         {
-          moved = movepiece(p, 1, 0, 0);
-          undrawghost(ghost);
-          ghost = drawghost(p);
+          moved = movepiece(gplayers[pl].p, 1, 0, 0);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.ccw)
         {
-          moved = rotatepiece(p, CCW, srs);
-          undrawghost(ghost);
-          ghost = drawghost(p);
+          moved = rotatepiece(gplayers[pl].p, CCW, srs);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.f)
         {
-          moved = rotatepiece(p, FLIP, srs);
-          undrawghost(ghost);
-          ghost = drawghost(p);
+          moved = rotatepiece(gplayers[pl].p, FLIP, srs);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.cw)
         {
-          moved = rotatepiece(p, CW, srs);
-          undrawghost(ghost);
-          ghost = drawghost(p);
+          moved = rotatepiece(gplayers[pl].p, CW, srs);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
 
         else if(sym == binds.h)
@@ -314,14 +337,14 @@ int main(int argc, char **args)
           if(canhold)
           {
             // perform hold
-            p = swaphold(p, qmeth);
+            gplayers[pl].p = swaphold(gplayers[pl].p, qmeth);
 
             // update ghost
-            undrawghost(ghost);
-            ghost = drawghost(p);
+            undrawghost(gplayers[pl].ghost);
+            gplayers[pl].ghost = drawghost(gplayers[pl].p);
 
             // draw
-            drawpiece(p);
+            drawpiece(gplayers[pl].p);
             drawqueue(); // queue might have been updated if ghold == NONE originally
             drawholdpiece(gplayers[cur_player].hold);
             SDL_UpdateWindowSurface(gwin);
@@ -340,13 +363,13 @@ int main(int argc, char **args)
 
         else if(sym == binds.hd)
         {
-          movepiece(p, 0, -1, true); // move down repeatedly
+          movepiece(gplayers[pl].p, 0, -1, true); // move down repeatedly
 
-          p = nextpiece(p, qmeth, tspinmeth);
+          gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
 
           // update ghost for new piece
-          undrawghost(ghost);
-          ghost = drawghost(p);
+          undrawghost(gplayers[pl].ghost);
+          gplayers[pl].ghost = drawghost(gplayers[pl].p);
 
           SDL_UpdateWindowSurface(gwin);
 
@@ -364,9 +387,9 @@ int main(int argc, char **args)
         if(moved)
         {
           if(sym == binds.cw || sym == binds.ccw || sym == binds.f)
-            p.lastrot = true;
+            gplayers[pl].p.lastrot = true;
           else
-            p.lastrot = false;
+            gplayers[pl].p.lastrot = false;
         }
 
         SDL_UpdateWindowSurface( gwin );

@@ -162,39 +162,51 @@ void swap(enum type &a, enum type &b)
 // uses static variables to maintain state
 enum type bag7(bool reset)
 {
-  static enum type bag[7];
-  static int siz = 0;
+  // static enum type bag[7];
+  // if not already initialized, initialize player bag
+  if(gplayers[cur_player].bag == NULL)
+  {
+    gplayers[cur_player].bag = new enum type[7];
+    for(int i = 0; i < 7; i++)
+    {
+      gplayers[cur_player].bag[i] = NONE;
+    }
+  }
+
+  // static int siz = 0;
 
   if(reset)
   {
-    siz = 0;
+    gplayers[cur_player].siz = 0;
     return NONE; // return type doesn't matter
   }
   
   // bag is empty
-  if(siz == 0)
+  if(gplayers[cur_player].siz == 0)
   {
     // fill with 1 of each piece
-    bag[siz++] = I;
-    bag[siz++] = J;
-    bag[siz++] = L;
-    bag[siz++] = S;
-    bag[siz++] = Z;
-    bag[siz++] = T;
-    bag[siz++] = O;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = I;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = J;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = L;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = S;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = Z;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = T;
+    gplayers[cur_player].bag[gplayers[cur_player].siz++] = O;
 
     // shuffle
     for(int i = 0; i < 200; i++)
     {
-      int j = rand() % 7;
-      int k = rand() % 7;
-      swap(bag[j], bag[k]);
+      // int j = rand() % 7;
+      // int k = rand() % 7;
+      int j = dist(gplayers[cur_player].gen) % 7;
+      int k = dist(gplayers[cur_player].gen) % 7;
+      swap(gplayers[cur_player].bag[j], gplayers[cur_player].bag[k]);
     }
   }
 
   // dish out 1 piece
-  siz--;
-  return bag[siz];
+  gplayers[cur_player].siz--;
+  return gplayers[cur_player].bag[gplayers[cur_player].siz];
 }
 
 // most primitive method (randomly select pieces independently)
@@ -202,7 +214,8 @@ enum type fullrand()
 {
   static const enum type pieces[] = {I, J, L, S, Z, O, T};
   static const int npieces = sizeof(pieces) / sizeof(*pieces);
-  return pieces[rand() % npieces];
+  // return pieces[rand() % npieces];
+  return pieces[dist(gplayers[cur_player].gen) % npieces];
 }
 
 // return next piece from gqueue, shift queue forward

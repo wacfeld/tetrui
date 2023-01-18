@@ -8,6 +8,7 @@
 #include <array>
 #include <time.h>
 #include <set>
+#include <random>
 
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 
@@ -24,8 +25,10 @@ typedef unsigned int uint;
 const int tot_height = 40;
 const int tot_width = 10;
 
-enum mode {SINGLE=1, VERSUS=2};
+enum mode {SINGLE=1, VERSUS=2, WHAT=3};
 extern enum mode gmode;
+
+extern std::uniform_int_distribution<int> dist;
 
 // rotation directions
 enum rot {CW, FLIP, CCW}; // FLIP means 180
@@ -96,7 +99,14 @@ struct player
   enum type queue[queue_len];
   enum type screen[tot_width][tot_height];
   enum type hold;
+
+  // random number generator for queue (all generators get seeded with the same seed so queues are identical)
+  std::mt19937 gen;
+  
+  struct piece p;
+  struct piece ghost;
   enum type *bag;
+  int siz;
 
   player()
   {
@@ -125,6 +135,7 @@ struct player
     }
 
     bag = NULL;
+    siz = 0;
   }
 };
 
