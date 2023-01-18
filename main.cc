@@ -255,8 +255,12 @@ int main(int argc, char **args)
         gplayers[pl].lastgrav = curtime;
 
         // move down once
-        movepiece(gplayers[pl].p, 0, -1, 0);
-
+        if(movepiece(gplayers[pl].p, 0, -1, 0))
+        {
+          gplayers[pl].p.lastrot = false;
+          gplayers[pl].p.lastkick = false;
+        }
+        
         // update screen
         SDL_UpdateWindowSurface( gwin );
       }
@@ -410,7 +414,11 @@ int main(int argc, char **args)
 
         else if(sym == binds.hd)
         {
-          movepiece(gplayers[pl].p, 0, -1, true); // move down repeatedly
+          if(movepiece(gplayers[pl].p, 0, -1, true)) // move down repeatedly
+          {
+            gplayers[pl].p.lastrot = false;
+            gplayers[pl].p.lastkick = false;
+          }
 
           gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
 

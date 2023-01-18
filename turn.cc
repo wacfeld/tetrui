@@ -355,7 +355,7 @@ void proc_garb(struct clear &cl)
 
     gplayers[cur_player].garb -= g;
 
-    fill_garb(g, false);
+    fill_garb(g, true);
   }
 
   // update skull meter
