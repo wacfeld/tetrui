@@ -11,7 +11,7 @@ bool topout(struct piece &p)
   // puts("topout?");
   for(auto &m : p.p)
   {
-    if(gboard[m[0]][m[1]] != NONE) // spawn mino collides with existing mino
+    if(gplayers[cur_player].board[m[0]][m[1]] != NONE) // spawn mino collides with existing mino
     {
       // puts("yes!");
       return 1;
@@ -140,7 +140,7 @@ struct piece spawnpiece(enum type t)
   // write piece onto board
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = t;
+    gplayers[cur_player].board[m[0]][m[1]] = t;
     // changeboard(m[0], m[1], t);
   }
 
@@ -209,16 +209,16 @@ enum type fullrand()
 enum type queuenext(enum type (*qmeth)(bool reset))
 {
   // grab next piece type
-  enum type next = gqueue[0];
+  enum type next = gplayer[cur_player].queue[0];
 
   // shift rest of queue forward
   for(int i = 0; i < queue_len - 1; i++)
   {
-    gqueue[i] = gqueue[i+1];
+    gplayer[cur_player].queue[i] = gplayer[cur_player].queue[i+1];
   }
 
   // put new piece at back of queue using given method
-  gqueue[queue_len - 1] = qmeth(false);
+  gplayer[cur_player].queue[queue_len - 1] = qmeth(false);
 
   return next;
 }
@@ -227,21 +227,21 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
 {
   enum type t; // type of new piece
 
-  if(ghold == NONE) // empty hold, grab from queue
+  if(gplayer[cur_player].hold == NONE) // empty hold, grab from queue
   {
     t = queuenext(qmeth);
-    ghold = p.t;
+    gplayer[cur_player].hold = p.t;
   }
   else // swap with hold
   {
-    t = ghold;
-    ghold = p.t;
+    t = gplayer[cur_player].hold;
+    gplayer[cur_player].hold = p.t;
   }
 
   // delete old piece and undraw
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    gplayers[cur_player].board[m[0]][m[1]] = NONE;
   }
   undrawpiece(p);
 
@@ -265,7 +265,7 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
       bool full = true;
       for(int i = 0; i < tot_width; i++)
       {
-        if(gboard[i][m[1]] == NONE)
+        if(gplayers[cur_player].board[i][m[1]] == NONE)
         {
           full = false;
         }
@@ -294,14 +294,14 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
     for(int r : rows) // iterate in descending order (thanks to std::greater)
     {
       // gboard contains an extra row at the very top so this works
-      memmove(&gboard[i][r], &gboard[i][r+1], sizeof(**gboard) * (tot_height - r));
+      memmove(&gplayers[cur_player].board[i][r], &gplayers[cur_player].board[i][r+1], sizeof(**gplayers[cur_player].board) * (tot_height - r));
     }
 
     // redraw column
     for(int j = 0; j < tot_height; j++)
     {
       // gchanged[i][j] = 1;
-      reboardmino(bX, bY, gboard[i][j], i, j);
+      reboardmino(bX, bY, gplayers[cur_player].board[i][j], i, j);
     }
   }
 
@@ -309,7 +309,7 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
   bool pc = true;
   for(int i = 0; i < tot_width; i++)
   {
-    if(gboard[i][0] != NONE)
+    if(gplayers[cur_player].board[i][0] != NONE)
       pc = false;
   }
   cl.pc = pc;

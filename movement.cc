@@ -6,7 +6,7 @@
 bool goodcoords(int x, int y)
 {
   if(x < 0 || y < 0 || x >= tot_width || y >= tot_height
-     || gboard[x][y] != NONE)
+     || gplayers[cur_player].board[x][y] != NONE)
   {
     // puts("these coords are NOT good");
     return false;
@@ -219,7 +219,7 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
   // delete piece from board
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    gplayers[cur_player].board[m[0]][m[1]] = NONE;
     // changeboard(m[0], m[1], NONE);
   }
 
@@ -249,7 +249,7 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
   // put piece back on board, rotated or not
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = p.t;
+    gplayers[cur_player].board[m[0]][m[1]] = p.t;
     // changeboard(m[0], m[1], p.t);
   }
 
@@ -277,7 +277,7 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
   // delete piece from board (otherwise it will 'collide' with itself)
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    gplayers[cur_player].board[m[0]][m[1]] = NONE;
     // changeboard(m[0], m[1], NONE);
   }
 
@@ -321,7 +321,7 @@ stopmoving:
   for(auto &m : p.p)
   {
     // printf("%d %d\n", m[0], m[1]);
-    gboard[m[0]][m[1]] = p.t;
+    gplayers[cur_player].board[m[0]][m[1]] = p.t;
     // changeboard(m[0], m[1], p.t);
   }
 

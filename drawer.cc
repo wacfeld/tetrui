@@ -333,7 +333,7 @@ void drawqueue()
 {
   for(int i = 0; i < queue_len; i++)
   {
-    drawqueuepiece(i, gqueue[i]);
+    drawqueuepiece(i, gplayers[cur_player].queue[i]);
   }
 }
 
@@ -341,7 +341,7 @@ void undrawghost(struct piece &p)
 {
   for(auto &m : p.p)
   {
-    boardmino(bX, bY, gboard[m[0]][m[1]], m[0], m[1]);
+    boardmino(bX, bY, gplayers[cur_player].board[m[0]][m[1]], m[0], m[1]);
   }
 }
 
@@ -354,7 +354,7 @@ struct piece drawghost(struct piece &p)
   // delete piece from board temporarily
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = NONE;
+    gplayers[cur_player].board[m[0]][m[1]] = NONE;
   }
 
   // move the copy down until it's grounded
@@ -370,13 +370,13 @@ struct piece drawghost(struct piece &p)
   // replace piece on board
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = p.t;
+    gplayers[cur_player].board[m[0]][m[1]] = p.t;
   }
 
   // draw ghost piece wherever not occupied already
   for(auto &m : q.p)
   {
-    if(gboard[m[0]][m[1]] == NONE)
+    if(gplayers[cur_player].board[m[0]][m[1]] == NONE)
     {
       boardmino(bX, bY, GHOST, m[0], m[1]);
     }

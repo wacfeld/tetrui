@@ -24,16 +24,19 @@ struct keybinds arr_wasd =
 
 enum mode gmode = VERSUS;
 
+std::vector<struct player> gplayers;
+int cur_player = 0; // index of current player
+
 // hold slot. NONE means empty (start of game)
-enum type ghold = NONE;
+// enum type ghold = NONE;
 
 // the queue, which is always full, determines what pieces come next
 // it itself is supplied using 7bag(), fullrand(), etc.
-enum type gqueue[queue_len];
+// enum type gqueue[queue_len];
 
 // 0 = empty
 // L, J, S, Z, I, O, T = respective colored mino
-enum type gboard[tot_width][tot_height+1];
+// enum type gboard[tot_width][tot_height+1];
 // guideline: there is a 10x20 buffer area above visible play area
 // the +1 is there so that the line clear code can operate (it stays as NONE the whole time)
 
@@ -57,8 +60,8 @@ bool stuck(struct piece &p, int dx, int dy)
   int i = 0;
   for(auto &m : p.p)
   {
-    saved[i++] = gboard[m[0]][m[1]];
-    gboard[m[0]][m[1]] = NONE;
+    saved[i++] = gplayers[cur_player].board[m[0]][m[1]];
+    gplayers[cur_player].board[m[0]][m[1]] = NONE;
     // changeboard(m[0], m[1], NONE);
   }
 
@@ -77,7 +80,7 @@ bool stuck(struct piece &p, int dx, int dy)
   i = 0;
   for(auto &m : p.p)
   {
-    gboard[m[0]][m[1]] = saved[i++];
+    gplayers[cur_player].board[m[0]][m[1]] = saved[i++];
     // gboard[m[0]][m[1]] = p.t;
     // changeboard(m[0], m[1], p.t);
   }
@@ -127,7 +130,7 @@ int main(int argc, char **args)
   // fill & draw the queue
   for(int i = 0; i < queue_len; i++)
   {
-    gqueue[i] = qmeth(false);
+    gplayers[cur_player].queue[i] = qmeth(false);
   }
 
   // for(int i = 0; i < 10; i++)
@@ -156,6 +159,7 @@ int main(int argc, char **args)
   // TODO proper move reset
   // TODO DAS/ARR
   // TODO edit mode
+  // sync queues
 
 
   // grab first piece from queue, draw everything
@@ -316,7 +320,7 @@ int main(int argc, char **args)
             // draw
             drawpiece(p);
             drawqueue(); // queue might have been updated if ghold == NONE originally
-            drawholdpiece(ghold);
+            drawholdpiece(gplayers[cur_player].hold);
             SDL_UpdateWindowSurface(gwin);
 
             // reset state variables

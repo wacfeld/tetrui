@@ -94,6 +94,7 @@ struct player
 {
   enum type board[tot_width][tot_height+1];
   enum type queue[queue_len];
+  enum type hold;
   enum type *bag;
 
   player()
@@ -117,9 +118,12 @@ struct player
   }
 };
 
-extern enum type gboard[tot_width][tot_height+1];
-extern enum type gqueue[queue_len];
-extern enum type ghold;
+extern std::vector<struct player> players;
+extern int cur_player;
+
+/* extern enum type gboard[tot_width][tot_height+1]; */
+/* extern enum type gqueue[queue_len]; */
+/* extern enum type ghold; */
 
 struct piece placepiece(int x, int y, enum type t);
 
