@@ -33,6 +33,8 @@ enum mode gmode = VERSUS;
 struct player *gplayers = NULL;
 int cur_player = 0; // index of current player
 
+const int garb_batch = 8; // maximum amount of pending garbage a player can receive at once
+
 // hold slot. NONE means empty (start of game)
 // enum type ghold = NONE;
 

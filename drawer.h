@@ -9,7 +9,7 @@ const int vis_width = 10;
 
 extern SDL_Window *gwin;
 extern SDL_Surface *gsurf;
-extern std::array<SDL_Surface *, 10> sprites;
+extern std::array<SDL_Surface *, 11> sprites;
 
 const int MINO_LEN = 16;
 
@@ -40,10 +40,10 @@ const int HCORN[] = {1,17};
 // board is 10x20
 const int spacing = 1;
 const int player_width = MINO_LEN*(hold_width + vis_width + queue_width);
-const int SCREEN_WIDTH = gmode * player_width + (gmode - 1) * spacing * MINO_LEN;
+const int SCREEN_WIDTH = gmode * player_width + (gmode) * spacing * MINO_LEN;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
-#define playerX(num) (num == 0 ? 0 : num * (spacing*MINO_LEN + player_width))
+#define playerX(num) ((num+1) * spacing * MINO_LEN + num * (player_width))
 
 // gscreen is kept synchronized with physical screen
 // reboardmino() consults this to see what needs updating

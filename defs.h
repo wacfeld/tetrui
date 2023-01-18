@@ -10,6 +10,9 @@
 #include <set>
 #include <random>
 
+#define max(x,y) ((x) > (y) ? (x) : (y))
+#define min(x,y) ((x) > (y) ? (y) : (x))
+
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 
 // print error message to stderr & exit
@@ -37,7 +40,7 @@ enum rot {CW, FLIP, CCW}; // FLIP means 180
 enum rotstate {ZERO, RIGHT, LEFT, TWO};
 
 // NONE specifies that a square is empty
-enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9};
+enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9, GARB=10};
 
 struct keybinds
 {
@@ -115,6 +118,11 @@ struct player
   bool locking;
   bool canhold;
 
+  // how much pending garbage the player has received
+  int garb;
+  int combo;
+  bool btb;
+
   player()
   {
     lost = false;
@@ -150,11 +158,17 @@ struct player
     lastreset = 0;
     locking = false;
     canhold = true;
+
+    garb = 0;
+    combo = -1;
+    btb = false;
   }
 };
 
 extern struct player *gplayers;
 extern int cur_player;
+
+extern const int garb_batch;
 
 /* extern enum type gboard[tot_width][tot_height+1]; */
 /* extern enum type gqueue[queue_len]; */

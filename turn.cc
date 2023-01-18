@@ -126,9 +126,6 @@ struct piece spawnpiece(enum type t)
 {
   struct piece p = placepiece(SX, SY, t);
 
-  // process garbage
-  // TODO
-
   // check for topout
   if(topout(p))
   {
@@ -328,12 +325,35 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
   }
   cl.pc = pc;
 
-  int garb = garbage(cl, guidelinecombo, guidelinebtb);
-  putclear(cl);
-  if(garb)
-  {
-    fprintf(stderr, " %d garbage sent\n", garb);
-  }
+
+  // if not singleplayer, handle garbage
+  // if(gmode != SINGLE)
+  // {
+  //   // print out clear/garbage info
+  //   int garb = garbage(cl, guidelinecombo, guidelinebtb);
+  //   putclear(cl);
+  //   if(garb)
+  //   {
+  //     fprintf(stderr, " %d garbage sent/cancelled\n", garb);
+  //   }
+
+  //   // if we cleared, don't accept any garbage. send/cancel garbage if applicable
+  //   if(cl.lines)
+  //   {
+  //     int g = min(garb, 
+  //   }
+
+  //   // if we didn't clear, accept pending garbage
+  //   else
+  //   {
+  //     // accept at most garb_batch lines
+  //     int g = min(garb_batch, gplayers[cur_player].garb);
+
+  //     gplayers[cur_player].garb -= g;
+
+      
+  //   }
+  // }
   
   // get next piece, spawn, draw, draw queue, and return
   enum type t = queuenext(qmeth);

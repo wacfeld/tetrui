@@ -94,28 +94,28 @@ int guidelinecombo(struct clear &cl)
   const static int combotablelen = sizeof(combotable) / sizeof(*combotable);
   const static int combomax = 5; // maxes out at 5
 
-  static int combo = -1;
+  // static int combo = -1;
 
   if(cl.lines == 0) // nothing was cleared; reset combo & exit
   {
-    combo = -1;
+    gplayers[cur_player].combo = -1;
     // putd(combo);
     return 0;
   }
 
   // something was cleared; increment combo and calculate combo garbage
-  combo++;
+  gplayers[cur_player].combo++;
 
   // putd(combo);
-  if(combo < combotablelen)
-    return combotable[combo];
+  if(gplayers[cur_player].combo < combotablelen)
+    return combotable[gplayers[cur_player].combo];
   else
     return combomax;
 }
 
 int guidelinebtb(struct clear &cl)
 {
-  static bool btb = false; // whether the last clear was a 'difficult clear'
+  // static bool btb = false; // whether the last clear was a 'difficult clear'
 
   int lines = 0;
 
@@ -127,43 +127,43 @@ int guidelinebtb(struct clear &cl)
   
   else if(cl.tspin && cl.mini) // any tspin mini -> +1
   {
-    if(btb)
+    if(gplayers[cur_player].btb)
       lines = 1;
-    btb = true;
+    gplayers[cur_player].btb = true;
   }
 
   else if(cl.tspin && cl.lines == 1) // tspin single -> +1
   {
-    if(btb)
+    if(gplayers[cur_player].btb)
       lines = 1;
-    btb = true;
+    gplayers[cur_player].btb = true;
   }
 
   else if(cl.tspin && cl.lines == 2) // tspin double -> +2
   {
-    if(btb)
+    if(gplayers[cur_player].btb)
       lines = 2;
-    btb = true;
+    gplayers[cur_player].btb = true;
   }
 
   else if(cl.lines == 4) // quad -> +2
   {
-    if(btb)
+    if(gplayers[cur_player].btb)
       lines = 2;
-    btb = true;
+    gplayers[cur_player].btb = true;
   }
 
   else if(cl.tspin && cl.lines == 3) // tspin triple -> +3
   {
-    if(btb)
+    if(gplayers[cur_player].btb)
       lines = 3;
-    btb = true;
+    gplayers[cur_player].btb = true;
   }
 
   else // non-difficult line clear, reset btb
   {
     lines = 0;
-    btb = false;
+    gplayers[cur_player].btb = false;
   }
 
   // putd(btb);

@@ -3,7 +3,7 @@
 
 SDL_Window *gwin;
 SDL_Surface *gsurf;
-std::array<SDL_Surface *, 10> sprites;
+std::array<SDL_Surface *, 11> sprites;
 
 // enum type gscreen[tot_width][tot_height];
 
@@ -176,6 +176,7 @@ void initsprites()
   SDL_Surface *bgspr = loadBMP("sprites/bg.bmp"); // board background
   SDL_Surface *qbgspr = loadBMP("sprites/qbg.bmp"); // queue background
   SDL_Surface *gspr = loadBMP("sprites/ghost.bmp"); // ghost piece
+  SDL_Surface *garbspr = loadBMP("sprites/garbage.bmp"); // garbage piece
 
   sprites[NONE] = bgspr;
   sprites[I] = ispr;
@@ -187,6 +188,7 @@ void initsprites()
   sprites[O] = ospr;
   sprites[GHOST] = gspr;
   sprites[QBG] = qbgspr;
+  sprites[GARB] = garbspr;
 }
 
 void initscreen()
@@ -196,12 +198,9 @@ void initscreen()
     int px = playerX(cur_player);
 
     // draw spacing
-    if(cur_player != 0)
+    for(int i = 0; i < hold_height; i++)
     {
-      for(int i = 0; i < hold_height; i++)
-      {
-        blitmino(px-MINO_LEN, 0, NONE, 0, i);
-      }
+      blitmino(px-MINO_LEN, 0, NONE, 0, i);
     }
 
     // draw hold
