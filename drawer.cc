@@ -5,7 +5,7 @@ SDL_Window *gwin;
 SDL_Surface *gsurf;
 std::array<SDL_Surface *, 10> sprites;
 
-enum type gscreen[tot_width][tot_height];
+// enum type gscreen[tot_width][tot_height];
 
 /* void close(struct winsurf ws, std::vector<SDL_Surface *> surfs) */
 void close()
@@ -98,7 +98,7 @@ void boardmino(int X, int Y, enum type t, int col, int row)
   blitmino(X, Y, t, col, srow);
 
   // update gscreen alongside actual screen
-  gscreen[col][row] = t;
+  gplayers[cur_player].screen[col][row] = t;
 }
 
 // after the initial covering of the board in NONE,
@@ -115,7 +115,7 @@ void reboardmino(int X, int Y, enum type t, int col, int row)
   // only blit if contents of cell have changed
   // useful for being efficient during line clears
   // if(gscreen[col][row] != gboard[col][row])
-  if(gscreen[col][row] != t)
+  if(gplayers[cur_player].screen[col][row] != t)
   {
     // puts("blitting");
     boardmino(X, Y, t, col, row);

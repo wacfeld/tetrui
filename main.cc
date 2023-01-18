@@ -102,15 +102,8 @@ bool grounded(struct piece &p)
 
 int main(int argc, char **args)
 {
-  // initialized players
-  if(gmode == VERSUS)
-  {
-    gplayers = new struct player [2];
-  }
-  else
-  {
-    gplayers = new struct player [1];
-  }
+  // initialize players
+  gplayers = new struct player[gmode];
 
   // init RNG
   srand(time(NULL));

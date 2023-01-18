@@ -43,7 +43,7 @@ const int SCREEN_HEIGHT = MINO_LEN*vis_height;
 
 // gscreen is kept synchronized with physical screen
 // reboardmino() consults this to see what needs updating
-extern enum type gscreen[tot_width][tot_height];
+/* extern enum type gscreen[tot_width][tot_height]; */
 
 void close();
 

@@ -24,7 +24,7 @@ typedef unsigned int uint;
 const int tot_height = 40;
 const int tot_width = 10;
 
-enum mode {SINGLE, VERSUS};
+enum mode {SINGLE=1, VERSUS=2};
 extern enum mode gmode;
 
 // rotation directions
@@ -94,6 +94,7 @@ struct player
 {
   enum type board[tot_width][tot_height+1];
   enum type queue[queue_len];
+  enum type screen[tot_width][tot_height];
   enum type hold;
   enum type *bag;
 
@@ -102,9 +103,18 @@ struct player
     // clear board
     for(int i = 0; i < tot_width; i++)
     {
-      for(int j = 0; j < tot_height; j++)
+      for(int j = 0; j <= tot_height; j++)
       {
         board[i][j] = NONE;
+      }
+    }
+
+    // clear screen
+    for(int i = 0; i < tot_width; i++)
+    {
+      for(int j = 0; j < tot_height; j++)
+      {
+        screen[i][j] = NONE;
       }
     }
 
