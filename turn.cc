@@ -313,7 +313,11 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
       pc = false;
   }
   cl.pc = pc;
+
+  putchar('\n');
   putclear(cl);
+  fprintf(stderr, "%d garbage sent\n", garbage(cl, guidelinecombo, guidelinebtb));
+  putchar('\n');
 
   // get next piece, spawn, draw, draw queue, and return
   enum type t = queuenext(qmeth);

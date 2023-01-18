@@ -90,7 +90,7 @@ bool threecornerT(struct piece &p)
 
 int guidelinecombo(struct clear &cl)
 {
-  const static combotable[13] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5};
+  const static int combotable[13] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5};
   const static int combotablelen = sizeof(combotable) / sizeof(*combotable);
   const static int combomax = 5; // maxes out at 5
 
@@ -99,12 +99,14 @@ int guidelinecombo(struct clear &cl)
   if(cl.lines == 0) // nothing was cleared; reset combo & exit
   {
     combo = -1;
+    putd(combo);
     return 0;
   }
 
   // something was cleared; increment combo and calculate combo garbage
   combo++;
 
+  putd(combo);
   if(combo < combotablelen)
     return combotable[combo];
   else
@@ -115,11 +117,14 @@ int guidelinebtb(struct clear &cl)
 {
   static bool btb = false; // whether the last clear was a 'difficult clear'
 
-  int lines;
+  int lines = 0;
 
   if(cl.lines == 0) // non-clears don't affect btb
+  {
+    putd(btb);
     return 0;
-
+  }
+  
   else if(cl.tspin && cl.mini) // any tspin mini -> +1
   {
     if(btb)
@@ -161,6 +166,7 @@ int guidelinebtb(struct clear &cl)
     btb = false;
   }
 
+  putd(btb);
   return lines;
 }
 
@@ -175,7 +181,9 @@ int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(s
   // no tspin
   if(!cl.tspin)
   {
-    if(cl.lines == 1) // single -> 0
+    if(cl.lines == 0) // no clear -> 0
+      ;
+    else if(cl.lines == 1) // single -> 0
       ;
     else if(cl.lines == 2) // double -> 1
       lines += 1;
@@ -211,7 +219,7 @@ int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(s
   lines += combometh(cl);
 
   // add btb garbage
-  lines += combometh(cl);
+  lines += btbmeth(cl);
 
   return lines;
 }
