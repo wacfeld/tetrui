@@ -38,8 +38,12 @@ const int QCORN[] = {1,17};
 const int HCORN[] = {1,17};
 
 // board is 10x20
-const int SCREEN_WIDTH = MINO_LEN*(hold_width + vis_width + queue_width);
+const int spacing = 1;
+const int player_width = MINO_LEN*(hold_width + vis_width + queue_width);
+const int SCREEN_WIDTH = gmode * player_width + (gmode - 1) * spacing * MINO_LEN;
 const int SCREEN_HEIGHT = MINO_LEN*vis_height;
+
+#define playerX(num) (num == 0 ? 0 : num * (spacing*MINO_LEN + player_width))
 
 // gscreen is kept synchronized with physical screen
 // reboardmino() consults this to see what needs updating

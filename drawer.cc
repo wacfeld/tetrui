@@ -95,7 +95,7 @@ void boardmino(int X, int Y, enum type t, int col, int row)
   int srow = vis_height - row - 1;
   // printf("%d %d\n", srow, col);
 
-  blitmino(X, Y, t, col, srow);
+  blitmino(playerX(cur_player)+X, Y, t, col, srow);
 
   // update gscreen alongside actual screen
   gplayers[cur_player].screen[col][row] = t;
@@ -138,7 +138,7 @@ void queuemino(int X, int Y, enum type t, int col, int row)
   }
 
   int srow = queue_height - row - 1;
-  blitmino(X, Y, t, col, srow);
+  blitmino(playerX(cur_player)+X, Y, t, col, srow);
 
   // don't bother with checking for changes with the queue, just redraw always
 }
@@ -191,34 +191,49 @@ void initsprites()
 
 void initscreen()
 {
-  // draw hold
-  for(int i = 0; i < hold_width; i++)
+  for(cur_player = 0; cur_player < gmode; cur_player++)
   {
-    for(int j = 0; j < hold_height; j++)
-    {
-      // reuse queue background here
-      boardmino(hX, hY, QBG, i, j);
-    }
-  }
+    int px = playerX(cur_player);
 
-  // draw board
-  for(int i = 0; i < vis_width; i++)
-  {
-    for(int j = 0; j < vis_height; j++)
+    // draw spacing
+    if(cur_player != 0)
     {
-      boardmino(bX, bY, NONE, i, j);
-      // boardmino(bX, bY, bag7(), i, j);
+      for(int i = 0; i < hold_height; i++)
+      {
+        blitmino(px-MINO_LEN, 0, NONE, 0, i);
+      }
     }
-  }
 
-  // draw queue
-  for(int i = 0; i < queue_width; i++)
-  {
-    for(int j = 0; j < queue_height; j++)
+    // draw hold
+    for(int i = 0; i < hold_width; i++)
     {
-      queuemino(qX, qY, QBG, i, j);
+      for(int j = 0; j < hold_height; j++)
+      {
+        // reuse queue background here
+        boardmino(hX, hY, QBG, i, j);
+      }
+    }
+
+    // draw board
+    for(int i = 0; i < vis_width; i++)
+    {
+      for(int j = 0; j < vis_height; j++)
+      {
+        boardmino(bX, bY, NONE, i, j);
+        // boardmino(bX, bY, bag7(), i, j);
+      }
+    }
+
+    // draw queue
+    for(int i = 0; i < queue_width; i++)
+    {
+      for(int j = 0; j < queue_height; j++)
+      {
+        queuemino(qX, qY, QBG, i, j);
+      }
     }
   }
+  cur_player = 0;
 }
 
 void wait(uint ms)
@@ -253,7 +268,10 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
   {
     for(int i = 0; i < vis_width; i++)
     {
-      boardmino(bX, bY, qmeth(false), i, j);
+      for(cur_player = 0; cur_player < gmode; cur_player++)
+      {
+        boardmino(bX, bY, qmeth(false), i, cur_player%2 ? j : vis_height-1-j);
+      }
     }
     SDL_UpdateWindowSurface( gwin );
     wait(d1);
@@ -265,12 +283,16 @@ void splash(enum type (*qmeth)(bool reset), uint d1, uint d2)
   {
     for(int i = 0; i < vis_width; i++)
     {
-      boardmino(bX, bY, NONE, i, j);
+      for(cur_player = 0; cur_player < gmode; cur_player++)
+      {
+        boardmino(bX, bY, NONE, i, cur_player%2 ? j : vis_height-1-j);
+      }
     }
     SDL_UpdateWindowSurface( gwin );
     wait(d1);
   }
   
+  cur_player = 0;
   wait(d2);
 }
 
