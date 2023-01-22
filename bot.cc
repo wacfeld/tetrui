@@ -8,7 +8,7 @@
 // #define mark(p) do { board[p.c[0]][p.c[1]][p.rotstate] = true; } while(0)
 // #define ismarked(p)
 
-#define marked(p, board) (board[p.c[0]][p.c[1]][p.r][p.lastrot][p.lastkick])
+#define marked(p) (board[p.c[0]][p.c[1]][p.r][p.lastrot][p.lastkick])
 
 std::vector<struct piece> possible(struct piece &p)
 {
@@ -26,7 +26,8 @@ std::vector<struct piece> possible(struct piece &p)
   Q.push(q);
 
   // mark p on board
-  marked(q, board) = true;
+  marked(q) = true;
+  // board[q.c[0]][q.c[1]][q.r][q.lastrot][q.lastkick] = true;
   if(grounded(q))
   {
     poss.push_back(q);
@@ -50,9 +51,9 @@ std::vector<struct piece> possible(struct piece &p)
     for(int i = 0; i < (int) (sizeof(cand)/sizeof(*cand)); i++)
     {
       // if a move is successful and isn't already marked, then mark and append to Q
-      if(success[i])
+      if(success[i] && !marked(cand[i]))
       {
-        marked(cand[i], board) = true;
+        marked(cand[i]) = true;
         Q.push(cand[i]);
         
         // if grounded, append to poss as well

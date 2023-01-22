@@ -224,7 +224,7 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
   // }
 
   // save copy of piece
-  auto temp = p;
+  // auto temp = p;
 
   // attempt to rotate
   bool rotated = rmeth(p, r);
@@ -266,9 +266,9 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
   // success
 
   // undraw piece
-  undrawpiece(temp);
+  // undrawpiece(temp);
   // redraw piece
-  drawpiece(p);
+  // drawpiece(p);
   return true;
 }
 
@@ -310,7 +310,7 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
 
     if(!moved) // on first successful move, undraw piece
     {
-      undrawpiece(p);
+      // undrawpiece(p);
       moved = true;
     }
 
@@ -330,7 +330,7 @@ stopmoving:
 
   if(moved)
   {
-    drawpiece(p);
+    // drawpiece(p);
 
     // unset lastrot, lastkick
     p.lastrot = false;

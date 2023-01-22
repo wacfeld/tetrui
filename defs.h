@@ -13,7 +13,7 @@
 #define mymax(x,y) ((x) > (y) ? (x) : (y))
 #define mymin(x,y) ((x) > (y) ? (y) : (x))
 
-#define putd(x) do{ printf(#x ": %d\n", x); } while(0)
+#define putd(x) do{ fprintf(stderr, #x ": %d\n", x); } while(0)
 
 // print error message to stderr & exit
 #define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); getchar();/*close(); exit(1);*/ } while(0)

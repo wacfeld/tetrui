@@ -5,6 +5,7 @@
 #include "movement.h"
 #include "turn.h"
 #include "score.h"
+#include "bot.h"
 
 
 // arrows move + WASD + shift + space
@@ -140,6 +141,25 @@ int main(int argc, char **args)
   enum type (*qmeth)(bool reset) = bag7;
   bool (*tspinmeth)(struct piece &) = threecornerT;
 
+  
+  // struct piece p = spawnpiece(T);
+  // SDL_UpdateWindowSurface( gwin );
+  // auto poss = possible(p);
+  // putd(poss.size());
+  // for(auto &q : poss)
+  // {
+  //   fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", q.c[0], q.c[1], q.r, q.lastrot, q.lastkick);
+  //   printf("%d\n", q.t);
+  //   drawpiece(q);
+  // SDL_UpdateWindowSurface( gwin );
+    
+  //   getchar();
+  //   undrawpiece(q);
+  // SDL_UpdateWindowSurface( gwin );
+  // }
+  // getchar();
+  // return 0;
+
   bool dosplash = true;
   if(dosplash)
   {
@@ -257,11 +277,13 @@ int main(int argc, char **args)
         gplayers[pl].lastgrav = curtime;
 
         // move down once
+        undrawpiece(gplayers[pl].p);
         if(movepiece(gplayers[pl].p, 0, -1, 0))
         {
           // gplayers[pl].p.lastrot = false;
           // gplayers[pl].p.lastkick = false;
         }
+        drawpiece(gplayers[pl].p);
         
         // update screen
         SDL_UpdateWindowSurface( gwin );
@@ -358,35 +380,47 @@ int main(int argc, char **args)
         // }
         if(sym == binds.sd)
         {
+          undrawpiece(gplayers[pl].p);
           moved = movepiece(gplayers[pl].p, 0, -1, 0);
+          drawpiece(gplayers[pl].p);
         }
         else if(sym == binds.l)
         {
+          undrawpiece(gplayers[pl].p);
           moved = movepiece(gplayers[pl].p, -1, 0, 0);
+          drawpiece(gplayers[pl].p);
           undrawghost(gplayers[pl].ghost);
           gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.r)
         {
+          undrawpiece(gplayers[pl].p);
           moved = movepiece(gplayers[pl].p, 1, 0, 0);
+          drawpiece(gplayers[pl].p);
           undrawghost(gplayers[pl].ghost);
           gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.ccw)
         {
+          undrawpiece(gplayers[pl].p);
           moved = rotatepiece(gplayers[pl].p, CCW, srs);
+          drawpiece(gplayers[pl].p);
           undrawghost(gplayers[pl].ghost);
           gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.f)
         {
+          undrawpiece(gplayers[pl].p);
           moved = rotatepiece(gplayers[pl].p, FLIP, srs);
+          drawpiece(gplayers[pl].p);
           undrawghost(gplayers[pl].ghost);
           gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
         else if(sym == binds.cw)
         {
+          undrawpiece(gplayers[pl].p);
           moved = rotatepiece(gplayers[pl].p, CW, srs);
+          drawpiece(gplayers[pl].p);
           undrawghost(gplayers[pl].ghost);
           gplayers[pl].ghost = drawghost(gplayers[pl].p);
         }
@@ -422,11 +456,13 @@ int main(int argc, char **args)
 
         else if(sym == binds.hd)
         {
+          undrawpiece(gplayers[pl].p);
           if(movepiece(gplayers[pl].p, 0, -1, true)) // move down repeatedly
           {
             // gplayers[pl].p.lastrot = false;
             // gplayers[pl].p.lastkick = false;
           }
+          drawpiece(gplayers[pl].p);
 
           // write piece to board
           for(auto &m : gplayers[pl].p.p)

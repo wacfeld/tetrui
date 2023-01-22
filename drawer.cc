@@ -150,7 +150,8 @@ void drawpiece(struct piece &p)
 {
   for(auto &m : p.p)
   {
-    // puts("hey");
+    puts("hey");
+    
     reboardmino(bX, bY, p.t, m[0], m[1]);
   }
 }
