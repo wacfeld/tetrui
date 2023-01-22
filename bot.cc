@@ -8,7 +8,7 @@
 // #define mark(p) do { board[p.c[0]][p.c[1]][p.rotstate] = true; } while(0)
 // #define ismarked(p)
 
-#define marked(p) (board[p.c[0]][p.c[1]][p.r][p.lastrot][p.lastkick])
+#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
 
 std::vector<struct piece> possible(struct piece &p)
 {
@@ -16,7 +16,7 @@ std::vector<struct piece> possible(struct piece &p)
   std::vector<struct piece> poss;
 
   // all possible locations/states of pieces (of the current type) on a board, represented by 2 center coords, a rotation state, lastrot and lastkick
-  bool board[tot_width*2+1][tot_height*2+1][4][2][2] = {0}; // initialize to all false
+  bool board[tot_width*2+2][tot_height*2+2][4][2][2] = {0}; // initialize to all false
   
   // create queue
   std::queue<struct piece> Q;

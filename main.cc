@@ -142,23 +142,23 @@ int main(int argc, char **args)
   bool (*tspinmeth)(struct piece &) = threecornerT;
 
   
-  // struct piece p = spawnpiece(T);
-  // SDL_UpdateWindowSurface( gwin );
-  // auto poss = possible(p);
-  // putd(poss.size());
-  // for(auto &q : poss)
-  // {
-  //   fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", q.c[0], q.c[1], q.r, q.lastrot, q.lastkick);
-  //   printf("%d\n", q.t);
-  //   drawpiece(q);
-  // SDL_UpdateWindowSurface( gwin );
+  struct piece p = spawnpiece(I);
+  SDL_UpdateWindowSurface( gwin );
+  auto poss = possible(p);
+  putd(poss.size());
+  for(auto &q : poss)
+  {
+    fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", q.c[0], q.c[1], q.r, q.lastrot, q.lastkick);
+    printf("%d\n", q.t);
+    drawpiece(q);
+  SDL_UpdateWindowSurface( gwin );
     
-  //   getchar();
-  //   undrawpiece(q);
-  // SDL_UpdateWindowSurface( gwin );
-  // }
-  // getchar();
-  // return 0;
+    getchar();
+    undrawpiece(q);
+  SDL_UpdateWindowSurface( gwin );
+  }
+  getchar();
+  return 0;
 
   bool dosplash = true;
   if(dosplash)
