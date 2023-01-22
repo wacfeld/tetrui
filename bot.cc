@@ -8,7 +8,8 @@
 // #define mark(p) do { board[p.c[0]][p.c[1]][p.rotstate] = true; } while(0)
 // #define ismarked(p)
 
-#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
+// #define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
+#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][0][0])
 
 std::vector<struct piece> possible(struct piece &p)
 {
