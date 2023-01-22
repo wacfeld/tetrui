@@ -9,7 +9,7 @@
 // #define ismarked(p)
 
 // #define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
-#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][0][0])
+#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
 
 std::vector<struct piece> possible(struct piece &p)
 {
