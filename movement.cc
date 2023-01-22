@@ -233,6 +233,9 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
 
   if(rotated)
   {
+    // set lastrot
+    p.lastrot = true;
+    
     // update rotstate on success
     {
       // 0, 1, 2, 3 in clockwise order
@@ -328,6 +331,10 @@ stopmoving:
   if(moved)
   {
     drawpiece(p);
+
+    // unset lastrot, lastkick
+    p.lastrot = false;
+    p.lastkick = false;
   }
 
   return moved;

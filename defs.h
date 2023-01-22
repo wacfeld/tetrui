@@ -10,8 +10,8 @@
 #include <set>
 #include <random>
 
-#define max(x,y) ((x) > (y) ? (x) : (y))
-#define min(x,y) ((x) > (y) ? (y) : (x))
+#define mymax(x,y) ((x) > (y) ? (x) : (y))
+#define mymin(x,y) ((x) > (y) ? (y) : (x))
 
 #define putd(x) do{ printf(#x ": %d\n", x); } while(0)
 
@@ -37,7 +37,7 @@ extern std::uniform_int_distribution<int> dist;
 enum rot {CW, FLIP, CCW}; // FLIP means 180
 
 // rotation states that a piece can be in
-enum rotstate {ZERO, RIGHT, LEFT, TWO};
+enum rotstate {ZERO=0, RIGHT=1, LEFT=2, TWO=3};
 
 // NONE specifies that a square is empty
 enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9, GARB=10, SKULL=11};

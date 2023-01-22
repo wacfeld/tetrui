@@ -41,7 +41,10 @@ const int ICENT[] = {3, -1};
 
 bool topout(struct piece &p);
 void lose();
+
 struct piece placepiece(int x, int y, enum type t);
+struct piece centpiece(int x, int y, enum type t);
+
 struct piece spawnpiece(enum type t);
 
 void swap(enum type &a, enum type &b);

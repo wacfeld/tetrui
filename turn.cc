@@ -120,6 +120,22 @@ struct piece placepiece(int x, int y, enum type t)
   return p;
 }
 
+// like placepiece but accepts piece center instead of upper-left corner
+// center coords are DOUBLED
+struct piece centpiece(int x, int y, enum type t)
+{
+  // determine top-left corner from center
+  if(t == I)
+    x -= ICENT[0], y -= ICENT[1];
+  else if(t == O)
+    x -= OCENT[0], y -= OCENT[1];
+  else
+    x -= CENT[0], y -= CENT[1];
+
+  // pass halved coords to placepiece()
+  return placepiece(x/2, y/2, t);
+}
+
 // spawn a piece above the playing field according to guideline
 // see https://tetris.fandom.com/wiki/SRS?file=SRS-pieces.png
 struct piece spawnpiece(enum type t)
@@ -331,7 +347,7 @@ void proc_garb(struct clear &cl)
   if(cl.lines)
   {
     // cancel if applicable
-    int g = min(garb, gplayers[cur_player].garb);
+    int g = mymin(garb, gplayers[cur_player].garb);
     gplayers[cur_player].garb -= g;
     garb -= g;
 
@@ -351,7 +367,7 @@ void proc_garb(struct clear &cl)
   else
   {
     // accept at most garb_batch lines
-    int g = min(garb_batch, gplayers[cur_player].garb);
+    int g = mymin(garb_batch, gplayers[cur_player].garb);
 
     gplayers[cur_player].garb -= g;
 

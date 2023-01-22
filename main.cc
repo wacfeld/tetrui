@@ -259,8 +259,8 @@ int main(int argc, char **args)
         // move down once
         if(movepiece(gplayers[pl].p, 0, -1, 0))
         {
-          gplayers[pl].p.lastrot = false;
-          gplayers[pl].p.lastkick = false;
+          // gplayers[pl].p.lastrot = false;
+          // gplayers[pl].p.lastkick = false;
         }
         
         // update screen
@@ -424,8 +424,8 @@ int main(int argc, char **args)
         {
           if(movepiece(gplayers[pl].p, 0, -1, true)) // move down repeatedly
           {
-            gplayers[pl].p.lastrot = false;
-            gplayers[pl].p.lastkick = false;
+            // gplayers[pl].p.lastrot = false;
+            // gplayers[pl].p.lastkick = false;
           }
 
           // write piece to board
@@ -452,14 +452,14 @@ int main(int argc, char **args)
           gplayers[pl].lastreset = curtime;
         }
 
-        // update whether last move was rotation or not
-        if(moved)
-        {
-          if(sym == binds.cw || sym == binds.ccw || sym == binds.f)
-            gplayers[pl].p.lastrot = true;
-          else
-            gplayers[pl].p.lastrot = false;
-        }
+        // // update whether last move was rotation or not
+        // if(moved)
+        // {
+        //   if(sym == binds.cw || sym == binds.ccw || sym == binds.f)
+        //     gplayers[pl].p.lastrot = true;
+        //   else
+        //     gplayers[pl].p.lastrot = false;
+        // }
 
         SDL_UpdateWindowSurface( gwin );
       }
