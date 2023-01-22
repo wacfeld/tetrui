@@ -320,19 +320,19 @@ int main(int argc, char **args)
         // enter a command
         if(sym == binds.cmd)
         {
-          char cmd[1000];
-          fprintf(stderr, "> ");
-          fgets(cmd, 1000, stdin);
+          // char cmd[1000];
+          // fprintf(stderr, "> ");
+          // fgets(cmd, 1000, stdin);
 
-          // remove trailing newline
-          cmd[strlen(cmd)-1] = 0;
+          // // remove trailing newline
+          // cmd[strlen(cmd)-1] = 0;
 
-          if(!strcmp(cmd, "next"))
-          {
+          // if(!strcmp(cmd, "next"))
+          // {
             cont_player++;
             cont_player %= gmode;
             fprintf(stderr, "now controlling player %d\n", cont_player);
-          }
+          // }
 
           continue;
         }
