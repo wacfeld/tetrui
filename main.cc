@@ -63,15 +63,15 @@ const int garb_batch = 8; // maximum amount of pending garbage a player can rece
 // returns true if piece touching ground
 bool stuck(struct piece &p, int dx, int dy)
 {
-  // save copy and then delete piece from board
-  enum type saved[4];
-  int i = 0;
-  for(auto &m : p.p)
-  {
-    saved[i++] = gplayers[cur_player].board[m[0]][m[1]];
-    gplayers[cur_player].board[m[0]][m[1]] = NONE;
-    // changeboard(m[0], m[1], NONE);
-  }
+  // // save copy and then delete piece from board
+  // enum type saved[4];
+  // int i = 0;
+  // for(auto &m : p.p)
+  // {
+  //   saved[i++] = gplayers[cur_player].board[m[0]][m[1]];
+  //   gplayers[cur_player].board[m[0]][m[1]] = NONE;
+  //   // changeboard(m[0], m[1], NONE);
+  // }
 
   bool g = false;
 
@@ -84,15 +84,17 @@ bool stuck(struct piece &p, int dx, int dy)
     }
   }
 
-  // reinstate piece, if it ever existed
-  i = 0;
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = saved[i++];
-    // gboard[m[0]][m[1]] = p.t;
-    // changeboard(m[0], m[1], p.t);
-  }
+  // // reinstate piece, if it ever existed
+  // i = 0;
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = saved[i++];
+  //   // gboard[m[0]][m[1]] = p.t;
+  //   // changeboard(m[0], m[1], p.t);
+  // }
 
+  // if(g)
+  //   puts("stuck!");
   return g;
 }
 
@@ -281,6 +283,12 @@ int main(int argc, char **args)
         // timer exceeded lock delay, lock down
         if(curtime - gplayers[pl].lastreset >= lockdelay)
         {
+          // write piece to board
+          for(auto &m : gplayers[pl].p.p)
+          {
+            gplayers[pl].board[m[0]][m[1]] = gplayers[pl].p.t;
+          }
+          
           // spawn new piece, reset variables, and continue
           gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
           undrawghost(gplayers[pl].ghost);
@@ -418,6 +426,12 @@ int main(int argc, char **args)
           {
             gplayers[pl].p.lastrot = false;
             gplayers[pl].p.lastkick = false;
+          }
+
+          // write piece to board
+          for(auto &m : gplayers[pl].p.p)
+          {
+            gplayers[pl].board[m[0]][m[1]] = gplayers[pl].p.t;
           }
 
           gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);

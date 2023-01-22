@@ -216,12 +216,12 @@ bool srs(struct piece &p, enum rot r)
 bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enum rot r))
 {
   // printf("attempting to rotate %d\n", r);
-  // delete piece from board
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = NONE;
-    // changeboard(m[0], m[1], NONE);
-  }
+  // // delete piece from board
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = NONE;
+  //   // changeboard(m[0], m[1], NONE);
+  // }
 
   // save copy of piece
   auto temp = p;
@@ -246,12 +246,12 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
     }
   }
 
-  // put piece back on board, rotated or not
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = p.t;
-    // changeboard(m[0], m[1], p.t);
-  }
+  // // put piece back on board, rotated or not
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = p.t;
+  //   // changeboard(m[0], m[1], p.t);
+  // }
 
 
   // failure
@@ -274,12 +274,12 @@ bool rotatepiece(struct piece &p, enum rot r, bool (*rmeth)(struct piece &p, enu
 // returns false if failed to move piece at all
 bool movepiece(struct piece &p, int dx, int dy, bool rep)
 {
-  // delete piece from board (otherwise it will 'collide' with itself)
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = NONE;
-    // changeboard(m[0], m[1], NONE);
-  }
+  // // delete piece from board (otherwise it will 'collide' with itself)
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = NONE;
+  //   // changeboard(m[0], m[1], NONE);
+  // }
 
   // make a copy of the coords & center
   auto cp = p.p;
@@ -317,13 +317,13 @@ bool movepiece(struct piece &p, int dx, int dy, bool rep)
   } while(rep);
 stopmoving:
 
-  // update board, redraw piece
-  for(auto &m : p.p)
-  {
-    // printf("%d %d\n", m[0], m[1]);
-    gplayers[cur_player].board[m[0]][m[1]] = p.t;
-    // changeboard(m[0], m[1], p.t);
-  }
+  // // update board
+  // for(auto &m : p.p)
+  // {
+  //   // printf("%d %d\n", m[0], m[1]);
+  //   gplayers[cur_player].board[m[0]][m[1]] = p.t;
+  //   // changeboard(m[0], m[1], p.t);
+  // }
 
   if(moved)
   {

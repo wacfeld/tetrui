@@ -135,12 +135,12 @@ struct piece spawnpiece(enum type t)
     // return p;
   }
 
-  // write piece onto board
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = t;
-    // changeboard(m[0], m[1], t);
-  }
+  // // write piece onto board
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = t;
+  //   // changeboard(m[0], m[1], t);
+  // }
 
   // move piece down
   movepiece(p, 0, -1, false);
@@ -249,11 +249,11 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
     gplayers[cur_player].hold = p.t;
   }
 
-  // delete old piece and undraw
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = NONE;
-  }
+  // // delete old piece and undraw
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = NONE;
+  // }
   undrawpiece(p);
 
   // spawn new piece & return it

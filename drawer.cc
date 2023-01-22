@@ -383,11 +383,11 @@ struct piece drawghost(struct piece &p)
   // make copy
   struct piece q = p;
 
-  // delete piece from board temporarily
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = NONE;
-  }
+  // // delete piece from board temporarily
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = NONE;
+  // }
 
   // move the copy down until it's grounded
   while(!grounded(q))
@@ -399,19 +399,24 @@ struct piece drawghost(struct piece &p)
     }
   }
 
-  // replace piece on board
-  for(auto &m : p.p)
-  {
-    gplayers[cur_player].board[m[0]][m[1]] = p.t;
-  }
+  // // replace piece on board
+  // for(auto &m : p.p)
+  // {
+  //   gplayers[cur_player].board[m[0]][m[1]] = p.t;
+  // }
 
-  // draw ghost piece wherever not occupied already
+  // draw ghost piece wherever not occupied already, then draw original piece (piece is in front of ghost)
   for(auto &m : q.p)
   {
-    if(gplayers[cur_player].board[m[0]][m[1]] == NONE)
-    {
+    // if(gplayers[cur_player].board[m[0]][m[1]] == NONE)
+    // {
       boardmino(bX, bY, GHOST, m[0], m[1]);
-    }
+    // }
+  }
+
+  for(auto &m : p.p)
+  {
+    boardmino(bX, bY, p.t, m[0], m[1]);
   }
 
   // return for later undrawing
