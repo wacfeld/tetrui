@@ -1,6 +1,7 @@
 #include "defs.h"
 #include "bot.h"
 #include "movement.h"
+#include "turn.h"
 
 #include <queue>
 
@@ -11,6 +12,7 @@
 // #define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
 #define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
 
+// determine all possible ways a piece could lock down
 std::vector<struct piece> possible(struct piece &p)
 {
   // poss consistss of all encountered grounded pieces
@@ -67,4 +69,41 @@ std::vector<struct piece> possible(struct piece &p)
   }
 
   return poss;
+}
+
+// executes the fastest achievable line clear. ties broken by number of lines cleared
+struct piece greedy()
+{
+  int &pl = cur_player;
+
+  // when considering possible piece placement orders, the hold/current/queue system is not very useful or easy to implement
+  // it's better to look at it as option 1 option 2/queue
+  // say hold/current/queue looks like [empty]/T/IJLSZ
+  // then option 1/option 2/queue looks like TI/JLSZ
+  // and O/T/IJLSZ corresponds to OT/IJLSZ
+  // this means that we don't have to think about a hold operation, and can simply consider 2 options at every step
+  // this function converts hold/current/queue to o1 o2/queue and then passes those values to a recursive helper function
+
+  // get queue
+  const enum type *queue = gplayers[pl].queue;
+  int qi = 0; // queue index
+
+  // option 1 is current piece
+  const struct piece &o1 = gplayers[pl].p;
+  
+  // option 2 is the hold, or if the hold is empty, the front of queue
+  enum type temp;
+  if(gplayers[pl].hold == NONE)
+    temp = queue[qi++];
+  else
+    temp = gplayers[pl].hold;
+  struct piece o2 = spawnpiece(temp);
+  
+  // pass to helper function
+  return greedy_h(o1, o2, queue, qi);
+}
+
+struct piece greedy_h(const struct piece &o1, const struct piece &o2, const enum type *queue, int qi)
+{
+  
 }
