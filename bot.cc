@@ -71,8 +71,8 @@ std::vector<struct piece> possible(struct piece &p)
   return poss;
 }
 
-// executes the fastest achievable line clear. ties broken by number of lines cleared
-struct piece greedy()
+// executes the fastest achievable line clear
+std::vector<struct piece> greedy()
 {
   int &pl = cur_player;
 
@@ -103,7 +103,67 @@ struct piece greedy()
   return greedy_h(o1, o2, queue, qi);
 }
 
-struct piece greedy_h(const struct piece &o1, const struct piece &o2, const enum type *queue, int qi)
+void advance(enum type choice, enum type &t1, enum type &t2, const enum type *queue, int &qi)
 {
+  if(choice == t1)
+  {
+    if(qi < queue_len)
+    {
+      t1 = queue[qi++];
+    }
+    else
+      t1 = NONE;
+  }
+  else
+  {
+    if(qi < queue_len)
+    {
+      t2 = queue[qi++];
+    }
+    else
+      t2 = NONE;
+  }
+}
+
+std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
+{
+  // create exploration queue
+  // each vector in the queue is a possible sequence of placements
+  std::queue<std::vector<struct piece>> Q;
   
+  // put initial options in exploration queue
+  auto v1 = possible(o1);
+  auto v2 = possible(o2);
+
+  for(auto &p : v1)
+    Q.push({p});
+  for(auto &p : v2)
+    Q.push({p});
+  
+
+  enum type t1;
+  enum type t2;
+  int qi;
+
+  while(!Q.empty())
+  {
+    t1 = o1.t;
+    t2 = o2.t;
+    qi = qeye;
+    
+    // get vector
+    auto &v = Q.front();
+    
+    // run through the vector (place pieces on board and advance state variables)
+    for(auto &p : v)
+    {
+      advance(p.t, t1, t2, queue, qi);
+      boardpiece(p); // don't have to check for clears since this algorithm terminates after finding one clear
+    }
+    
+    // check of clear has occurred
+    int cl = findclears(
+
+    Q.pop();
+  }
 }

@@ -104,6 +104,24 @@ bool grounded(struct piece &p)
   return stuck(p, 0, -1);
 }
 
+// write piece to current player's board
+void boardpiece(struct piece &p)
+{
+  for(auto &m : p.p)
+  {
+    gplayers[cur_player].board[m[0]][m[1]] = p.t;
+  }
+}
+
+// delete piece from current player's board
+void unboardpiece(struct piece &p)
+{
+  for(auto &m : p.p)
+  {
+    gplayers[cur_player].board[m[0]][m[1]] = NONE;
+  }
+}
+
 // set state variables for next turn
 #define nextturn() do {\
     gplayers[pl].canhold = true;\
