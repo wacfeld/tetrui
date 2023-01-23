@@ -56,4 +56,5 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset));
 
 struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (*tspinmeth)(struct piece &));
 
+std::set<int, std::greater<int>> findclears(struct piece &p);
 #endif

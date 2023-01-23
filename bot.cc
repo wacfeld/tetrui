@@ -13,7 +13,7 @@
 #define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
 
 // determine all possible ways a piece could lock down
-std::vector<struct piece> possible(struct piece &p)
+std::vector<struct piece> possible(const struct piece &p)
 {
   // poss consistss of all encountered grounded pieces
   std::vector<struct piece> poss;
@@ -82,7 +82,7 @@ std::vector<struct piece> greedy()
   // then option 1/option 2/queue looks like TI/JLSZ
   // and O/T/IJLSZ corresponds to OT/IJLSZ
   // this means that we don't have to think about a hold operation, and can simply consider 2 options at every step
-  // this function converts hold/current/queue to o1 o2/queue and then passes those values to a recursive helper function
+  // this function converts hold/current/queue to o1 o2/queue and then passes those values to a helper function
 
   // get queue
   const enum type *queue = gplayers[pl].queue;
@@ -161,9 +161,57 @@ std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o
       boardpiece(p); // don't have to check for clears since this algorithm terminates after finding one clear
     }
     
-    // check of clear has occurred
-    int cl = findclears(
+    // check of clear has occurred after placing last piece on board
+    int cl = findclears(v.back()).size();
+    if(cl != 0) // clears have occurred; return this vector
+    {
+      return v;
+    }
+
+    if(t1 == NONE && t2 == NONE) // ran out of pieces; don't do anything
+    { }
+    else
+    {
+      if(t1 != NONE) // try selecting t1
+      {
+        struct piece q = spawnpiece(t1);
+        auto poss = possible(q);
+        
+        // append them all to queue
+        for(struct piece &r : poss)
+        {
+          auto newv = v;
+          newv.push_back(r);
+          Q.push(newv);
+        }
+      }
+      
+      if(t2 != NONE) // try selecting t2
+      {
+        struct piece q = spawnpiece(t2);
+        auto poss = possible(q);
+        
+        // append them all to queue
+        for(struct piece &r : poss)
+        {
+          auto newv = v;
+          newv.push_back(r);
+          Q.push(newv);
+        }
+      }
+    }
+
+    // remove pieces from board
+    for(auto &p : v)
+    {
+      unboardpiece(p);
+    }
 
     Q.pop();
   }
+  
+  // 
+  fprintf(stderr, "greedy_h: failed to find solution\n");
+  auto ret = {v1[0]};
+  return ret;
 }
