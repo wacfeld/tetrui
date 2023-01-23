@@ -445,6 +445,7 @@ int main(int argc, char **args)
           if(gplayers[pl].canhold)
           {
             // perform hold
+            undrawpiece(gplayers[pl].p);
             gplayers[pl].p = swaphold(gplayers[pl].p, qmeth);
 
             // update ghost

@@ -270,7 +270,7 @@ struct piece swaphold(struct piece &p, enum type (*qmeth)(bool reset))
   // {
   //   gplayers[cur_player].board[m[0]][m[1]] = NONE;
   // }
-  undrawpiece(p);
+  // undrawpiece(p);
 
   // spawn new piece & return it
   struct piece q = spawnpiece(t);
