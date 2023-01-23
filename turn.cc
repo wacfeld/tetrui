@@ -378,18 +378,14 @@ void proc_garb(struct clear &cl)
   skullmeter(cur_player, gplayers[cur_player].garb);
 }
 
-// check for line clears, spawn new piece and draw
-// spawn next piece (using whatever selection process) and draw
-struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (*tspinmeth)(struct piece &))
+// given a piece that has locked down, determine what clears it can have caused
+std::set<int, std::greater<int>> findclears(struct piece &p)
 {
-  // check for line clears
   std::set<int, std::greater<int>> rows; // rows to clear
-  // std::greater puts the ints in descending order, which makes clearing the lines easire later
-  for(auto &m : old.p) // loop through 4 minoes and check their rows
+  for(auto &m : p.p)
   {
     if(!rows.count(m[1]))
     {
-      // check if line is full
       bool full = true;
       for(int i = 0; i < tot_width; i++)
       {
@@ -398,7 +394,6 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
           full = false;
         }
       }
-
       // if full, add to rows
       if(full)
       {
@@ -406,6 +401,15 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
       }
     }
   }
+
+  return rows;
+}
+
+// check for line clears, spawn new piece and draw
+// spawn next piece (using whatever selection process) and draw
+struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (*tspinmeth)(struct piece &))
+{
+  auto rows = findclears(old);
 
   // calculate clear
   struct clear cl;
