@@ -9,8 +9,8 @@
 // #define mark(p) do { board[p.c[0]][p.c[1]][p.rotstate] = true; } while(0)
 // #define ismarked(p)
 
+#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][0][0])
 // #define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
-#define marked(p) (board[p.c[0]+1][p.c[1]+1][p.r][p.lastrot][p.lastkick])
 
 // determine all possible ways a piece could lock down
 std::vector<struct piece> possible(const struct piece &p)
@@ -125,6 +125,35 @@ void advance(enum type choice, enum type &t1, enum type &t2, const enum type *qu
   }
 }
 
+// function assumes piece is on board already
+bool gap(struct piece &p)
+{
+  // puts("hi");
+  // enum type back[4];
+  // for(int i = 0; i < 4; i++)
+  // {
+  //   back[i] = gplayers[cur_player].board[p.p[i][0]][p.p[i][1]];
+  // }
+
+  // boardpiece(p);
+
+  bool g = false;
+
+  for(auto &m : p.p)
+  {
+    if(goodcoords(m[0], m[1]-1))
+      g = true;
+  }
+
+  // for(int i = 0; i < 4; i++)
+  // {
+  //   gplayers[cur_player].board[p.p[i][0]][p.p[i][1]] = back[i];
+  // }
+
+  return g;
+}
+
+int qc = 0;
 std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
 {
   // create exploration queue
@@ -159,14 +188,25 @@ std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o
     {
       advance(p.t, t1, t2, queue, qi);
       boardpiece(p); // don't have to check for clears since this algorithm terminates after finding one clear
+      drawpiece(p);
     }
     
-    // check of clear has occurred after placing last piece on board
+    // check if clear has occurred after placing last piece on board
     int cl = findclears(v.back()).size();
     if(cl != 0) // clears have occurred; return this vector
     {
       return v;
     }
+    else if(gap(v.back())) // otheriwse, if gap, ignore
+    {
+      // puts("gap");
+      goto undo;
+    }
+    else
+    {
+      // puts("gap!");
+    }
+    SDL_UpdateWindowSurface( gwin );
 
     if(t1 == NONE && t2 == NONE) // ran out of pieces; don't do anything
     { }
@@ -182,6 +222,7 @@ std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o
         {
           auto newv = v;
           newv.push_back(r);
+          // putd(qc++);
           Q.push(newv);
         }
       }
@@ -196,16 +237,20 @@ std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o
         {
           auto newv = v;
           newv.push_back(r);
+          // putd(qc++);
           Q.push(newv);
         }
       }
     }
 
+undo:
     // remove pieces from board
     for(auto &p : v)
     {
       unboardpiece(p);
+      undrawpiece(p);
     }
+    SDL_UpdateWindowSurface( gwin );
 
     Q.pop();
   }

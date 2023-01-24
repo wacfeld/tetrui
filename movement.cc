@@ -92,7 +92,7 @@ bool srs(struct piece &p, enum rot r)
   {
     static unsigned long long ORC = 0;
     ORC++;
-    fprintf(stderr, "why are you rotating an O piece? this is the %Lu%s time you've done this\n", ORC, suffix(ORC));
+    // fprintf(stderr, "why are you rotating an O piece? this is the %Lu%s time you've done this\n", ORC, suffix(ORC));
     return true;
   }
 

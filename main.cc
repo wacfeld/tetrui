@@ -61,6 +61,11 @@ const int garb_batch = 8; // maximum amount of pending garbage a player can rece
 //   gchanged[x][y] = 1;
 // }
 
+void putpiece(struct piece &p)
+{
+  fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", p.c[0], p.c[1], p.r, p.lastrot, p.lastkick);
+}
+
 // returns true if piece touching ground
 bool stuck(struct piece &p, int dx, int dy)
 {
@@ -368,20 +373,33 @@ int main(int argc, char **args)
         // enter a command
         if(sym == binds.cmd)
         {
-  auto poss = possible(gplayers[pl].p);
-  putd(poss.size());
-  for(auto &q : poss)
-  {
-    fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", q.c[0], q.c[1], q.r, q.lastrot, q.lastkick);
-    printf("%d\n", q.t);
-    drawpiece(q);
-  SDL_UpdateWindowSurface( gwin );
+  // auto poss = possible(gplayers[pl].p);
+  // putd(poss.size());
+  // for(auto &q : poss)
+  // {
+  //   fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", q.c[0], q.c[1], q.r, q.lastrot, q.lastkick);
+  //   printf("%d\n", q.t);
+  //   drawpiece(q);
+  // SDL_UpdateWindowSurface( gwin );
     
-    getchar();
-    undrawpiece(q);
-  SDL_UpdateWindowSurface( gwin );
-  }
-  getchar();
+  //   getchar();
+  //   undrawpiece(q);
+  // SDL_UpdateWindowSurface( gwin );
+  // }
+  // getchar();
+
+          auto soln = greedy();
+          putd(soln.size());
+          for(auto &s : soln)
+          {
+            putpiece(s);
+            drawpiece(s);
+            SDL_UpdateWindowSurface(gwin);
+            getchar();
+            undrawpiece(s);
+            SDL_UpdateWindowSurface(gwin);
+          }
+          getchar();
           
           // char cmd[1000];
           // fprintf(stderr, "> ");
