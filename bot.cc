@@ -305,14 +305,15 @@ undo:
 
 int getelev(struct piece &p)
 {
-  // get minimum y coordinate of 4 minoes
-  int min = tot_height*10;
+  // get maximum y coordinate of 4 minoes
+  int max = -3;
   for(auto &m : p.p)
   {
-    min = mymin(min, m[1]);
+    max = mymax(max, m[1]);
   }
 
-  return min;
+  // putd(max);
+  return max;
 }
 
 // returns score depending on how many tetrominoes the current board state accepts (has no gaps)
@@ -342,15 +343,15 @@ long permscore()
     for(struct piece &q : poss)
     {
       boardpiece(q);
-      // if(!gap(q))
-      if(!countgaps())
+      if(!gap(q))
+      // if(!countgaps())
       {
         numaccepts++;
       }
       unboardpiece(q);
     }
 
-    score += numaccepts;
+    // score += numaccepts;
     if(numaccepts)
       score += maxplace;
   }
@@ -372,6 +373,7 @@ std::vector<struct piece> filter(bool pred(), std::vector<struct piece> v)
 // 9-0 stacking, where the goal is create a robust 9-wide stack on the left and use I pieces to do quads on the right (ideally back to back)
 std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
 {
+  // putd(counttallgaps());
   // for the moment this method is very shortsighted
   // it only considers the current two options, without looking ahead
   // it compensates for that by trying to accommodate for all possible upcoming pieces
@@ -388,25 +390,32 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   auto v1 = possible(o1);
   auto v2 = possible(o2);
 
-  // find the highest-scoring possibility (fewest possible gaps)
-  int maxscore = 0;
-  struct piece *maxpiece = &v1[0];
+  // // find the highest-scoring possibility (fewest possible gaps)
+  // int maxscore = 0;
+  // struct piece *maxpiece = &v1[0];
 
   // 1. if I piece and quad possible, do quad
-  // 2. if no zero-gap options, pick highest-permitting lowest tall gap count lowest elevation option
+  // 2. if no zero-gap options, pick lowest tall gap count highest-permitting lowest elevation option
   // 3. if zero-gap options, pick highest-permitting lowest-elevation option
 
   int zmaxperm = -1;
-  int zmaxelev = tot_height*3+10;
+  int zminelev = tot_height*3+10;
   struct piece *zmaxpermpiece = 0;
-
-  int nmaxperm = -1;
-  int nmintgap = tot_height*tot_width + 10;
-  int nmaxelev = tot_height*3+10;
-  struct piece *nmaxpermpiece = 0;
   
-  for (std::vector<struct piece> v : {std::move(v1), std::move(v2)}) {
-    for (struct piece &p : v) {
+  int gmaxperm = -1;
+  int gminelev = tot_height*3+10;
+  struct piece *gbestpiece = 0;
+
+  int nmintgap = tot_height*tot_width + 10;
+  int nmaxperm = -1;
+  int nminelev = tot_height*3+10;
+  struct piece *nmaxpermpiece = 0;
+
+  // concatenate vectors
+  v1.insert(v1.end(), v2.begin(), v2.end());
+  
+  // for (std::vector<struct piece> v : {std::move(v1), std::move(v2)}) {
+    for (struct piece &p : v1) {
       
       boardpiece(p);
       
@@ -417,10 +426,10 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
         return {p};
       }
 
-      int gaps = counttallgaps();
+      int tgaps = counttallgaps();
       
       // 3. zero gaps
-      if(!gaps)
+      if(!tgaps)
       {
         // highest-permitting
         int perm = permscore();
@@ -428,58 +437,97 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
         if(perm > zmaxperm)
         {
           zmaxperm = perm;
-          zmaxelev = elev;
+          zminelev = elev;
           zmaxpermpiece = &p;
+        // puts("replacing");
+        // printf("%d\n", zmaxpermpiece);
         }
 
         // lowest elevation
-        else if(perm == zmaxperm && elev > zmaxelev )
+        else if(perm == zmaxperm && elev < zminelev )
+        // if(elev < zminelev )
         {
-          zmaxelev = elev;
+          // printf("old elev %d new elev %d\n", zminelev, elev);
+          zminelev = elev;
           zmaxpermpiece = &p;
+        }
+      }
+
+      else if(!gap(p))
+      {
+        int perm = permscore();
+        int elev = getelev(p);
+        if(perm > gmaxperm)
+        {
+          gmaxperm = perm;
+          gminelev = elev;
+          gbestpiece = &p;
+        }
+
+        else if(perm == gmaxperm && elev < gminelev)
+        {
+          // printf("old elev %d new elev %d\n", gminelev, elev);
+          gminelev = elev;
+          gbestpiece = &p;
         }
       }
 
       // 2. has gaps
       else
       {
-        // highest-permitting
         int perm = permscore();
         int tg = counttallgaps();
         int elev = getelev(p);
-        if(perm > nmaxperm)
+        if(tg < nmintgap)
         {
-          nmaxperm = perm;
           nmintgap = tg;
-          nmaxelev = elev;
+          nmaxperm = perm;
+          nminelev = elev;
           nmaxpermpiece = &p;
         }
 
-        else if(perm == nmaxperm && tg < nmintgap)
+        else if(perm > nmaxperm && tg == nmintgap)
         {
-          nmintgap = tg;
-          nmaxelev = elev;
+          nmaxperm = perm;
+          nminelev = elev;
           nmaxpermpiece = &p;
         }
 
         // lowest elevation
-        else if(perm == nmaxperm && tg == nmintgap && elev > maxelev )
+        else if(perm == nmaxperm && tg == nmintgap && elev < nminelev )
         {
-          nmaxelev = elev;
+          // printf("old elev %d new elev %d\n", nminelev, elev);
+          nminelev = elev;
           nmaxpermpiece = &p;
         }
       }
 
-      int gs = permscore();
-      if(gs > maxscore)
-      {
-        maxscore = gs;
-        maxpiece = &p;
-      }
+      // int gs = permscore();
+      // if(gs > maxscore)
+      // {
+      //   maxscore = gs;
+      //   maxpiece = &p;
+      // }
 
       unboardpiece(p);
     }
-  }
+  // }
 
-  return {*maxpiece};
+  if(zmaxpermpiece)
+  {
+    // puts("z");
+    return {*zmaxpermpiece};
+  }
+  else if(gbestpiece)
+  {
+    // puts("g");
+    return {*gbestpiece};
+  }
+  else if(nmaxpermpiece)
+  {
+    // puts("n");
+    return {*nmaxpermpiece};
+  }
+  error("no possible pieces found");
+  // return {*maxpiece};
 }
