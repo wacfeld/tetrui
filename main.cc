@@ -388,7 +388,8 @@ int main(int argc, char **args)
   // }
   // getchar();
 
-          auto soln = greedy();
+          // auto soln = calc(greedy);
+          auto soln = calc(ninezero);
           putd(soln.size());
           for(auto &s : soln)
           {

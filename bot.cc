@@ -71,8 +71,7 @@ std::vector<struct piece> possible(const struct piece &p)
   return poss;
 }
 
-// executes the fastest achievable line clear
-std::vector<struct piece> greedy()
+std::vector<struct piece> calc(std::vector<struct piece> method(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye))
 {
   int &pl = cur_player;
 
@@ -99,8 +98,8 @@ std::vector<struct piece> greedy()
     temp = gplayers[pl].hold;
   struct piece o2 = spawnpiece(temp);
   
-  // pass to helper function
-  return greedy_h(o1, o2, queue, qi);
+  // pass on
+  return method(o1, o2, queue, qi);
 }
 
 void advance(enum type choice, enum type &t1, enum type &t2, const enum type *queue, int &qi)
@@ -125,6 +124,31 @@ void advance(enum type choice, enum type &t1, enum type &t2, const enum type *qu
   }
 }
 
+// go through entire board, count how many minoes how air beneath them
+int countgaps()
+{
+  int c = 0;
+  
+  auto &board = gplayers[cur_player].board;
+  for(int i = 0; i < tot_width; i++)
+  {
+    for(int j = 0; j < tot_height; j++)
+    {
+      if(board[i][j] != NONE && goodcoords(i, j-1))
+        c++;
+    }
+  }
+
+  return c;
+}
+
+// go through entire board, count how many air cells have minoes vertically above them (at any distance)
+int counttallgaps()
+{
+  
+}
+
+// return true if air gap exists directly below any of the piece's minoes
 // function assumes piece is on board already
 bool gap(struct piece &p)
 {
@@ -153,8 +177,9 @@ bool gap(struct piece &p)
   return g;
 }
 
-int qc = 0;
-std::vector<struct piece> greedy_h(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
+// executes the fastest achievable line clear. uses BFS
+// int qc = 0;
+std::vector<struct piece> greedy(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
 {
   // create exploration queue
   // each vector in the queue is a possible sequence of placements
@@ -256,7 +281,108 @@ undo:
   }
   
   // 
-  fprintf(stderr, "greedy_h: failed to find solution\n");
+  fprintf(stderr, "greedy: failed to find solution\n");
   auto ret = {v1[0]};
   return ret;
+}
+
+// returns score depending on how many tetrominoes the current board state accepts (has no gaps)
+// rules being, accepting more tetromino types is always better
+// ties broken by how many placements are accepted by those types
+long gapscore()
+{
+  // current shortcomings:
+  // does not consider possible clears which eliminate gaps
+  // does not consider the differences between gaps (some are less bad)
+  
+  long score = 0;
+  
+  // each accepted tetromino contributes at least this much, to guarantee that more tetrominoes is better that fewer tetrominoes with many placements
+  const static int maxplace = (tot_width*2+2)*(tot_height*2+2)*4*2*2;
+  
+  for(enum type t : {I,J,L,S,Z,T,O})
+  {
+    // spawn in piece
+    struct piece p = spawnpiece(t);
+    
+    // see all possible ways to place it down
+    std::vector<struct piece> poss = possible(p);
+    
+    // count how many placements are gapless
+    int numaccepts = 0;
+    for(struct piece &q : poss)
+    {
+      boardpiece(q);
+      // if(!gap(q))
+      if(!countgaps())
+      {
+        numaccepts++;
+      }
+      unboardpiece(q);
+    }
+
+    score += numaccepts;
+    if(numaccepts)
+      score += maxplace;
+  }
+
+  return score;
+}
+
+// std::vector<struct piece> rank()
+// {
+  
+// }
+
+// filter out all piece placements that don't satisfy pred()
+std::vector<struct piece> filter(bool pred(), std::vector<struct piece> v)
+{
+  
+}
+
+// 9-0 stacking, where the goal is create a robust 9-wide stack on the left and use I pieces to do quads on the right (ideally back to back)
+std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
+{
+  // for the moment this method is very shortsighted
+  // it only considers the current two options, without looking ahead
+  // it compensates for that by trying to accommodate for all possible upcoming pieces
+  
+  // if have to create gap, pick the placement that makes the fewest/smallest gaps
+  // if gaps exist and a placement can eliminate it, do that
+  // try to keep the range of heights on the stack minimal
+
+  auto v1 = possible(o1);
+  auto v2 = possible(o2);
+
+  // find the highest-scoring possibility (fewest possible gaps)
+  int maxscore = 0;
+  struct piece *maxpiece = &v1[0];
+  for(auto &p : v1)
+  {
+    boardpiece(p);
+
+    int gs = gapscore();
+    if(gs > maxscore)
+    {
+      maxscore = gs;
+      maxpiece = &p;
+    }
+
+    unboardpiece(p);
+  }
+  for(auto &p : v2)
+  {
+    boardpiece(p);
+
+    int gs = gapscore();
+    if(gs > maxscore)
+    {
+      maxscore = gs;
+      maxpiece = &p;
+    }
+
+    unboardpiece(p);
+  }
+
+  return {*maxpiece};
 }
