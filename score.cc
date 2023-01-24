@@ -211,7 +211,7 @@ int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(s
       else if(cl.lines == 3) // tspin triple -> 6
         lines += 6;
       else
-        error("invalid tspin line count: %d\n", cl.lines);
+        fprintf(stderr,"invalid tspin line count: %d\n", cl.lines);
     }
   }
 

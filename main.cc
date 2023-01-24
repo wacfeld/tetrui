@@ -110,7 +110,7 @@ bool grounded(struct piece &p)
 }
 
 // write piece to current player's board
-void boardpiece(struct piece &p)
+void boardpiece(const struct piece &p)
 {
   for(auto &m : p.p)
   {
@@ -119,7 +119,7 @@ void boardpiece(struct piece &p)
 }
 
 // delete piece from current player's board
-void unboardpiece(struct piece &p)
+void unboardpiece(const struct piece &p)
 {
   for(auto &m : p.p)
   {
@@ -388,19 +388,47 @@ int main(int argc, char **args)
   // }
   // getchar();
 
-          // auto soln = calc(greedy);
-          auto soln = calc(ninezero);
-          putd(soln.size());
-          for(auto &s : soln)
+          while(1)
           {
-            putpiece(s);
-            drawpiece(s);
-            SDL_UpdateWindowSurface(gwin);
-            getchar();
-            undrawpiece(s);
-            SDL_UpdateWindowSurface(gwin);
+
+            // auto soln = calc(greedy);
+            auto soln = calc(ninezero);
+            putd(soln.size());
+            for(auto &s : soln)
+            {
+              putpiece(s);
+              undrawghost(gplayers[pl].ghost);
+              drawpiece(s);
+              SDL_UpdateWindowSurface(gwin);
+              // getchar();
+              // wait(200);
+
+              // hold called for
+              if(s.t != gplayers[pl].p.t)
+              {
+                undrawpiece(gplayers[pl].p);
+                gplayers[pl].p = swaphold(gplayers[pl].p, qmeth);
+
+                undrawghost(gplayers[pl].ghost);
+                // gplayers[pl].ghost = drawghost(gplayers[pl].p);
+                drawholdpiece(gplayers[cur_player].hold);
+              }
+
+              boardpiece(s);
+              gplayers[pl].p = s;
+              
+              gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
+              gplayers[pl].ghost = drawghost(gplayers[pl].p);
+
+              drawpiece(gplayers[pl].p);
+              drawqueue();
+              
+              nextturn();
+              
+              SDL_UpdateWindowSurface(gwin);
+              // wait(200);
+            }
           }
-          getchar();
           
           // char cmd[1000];
           // fprintf(stderr, "> ");

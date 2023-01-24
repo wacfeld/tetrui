@@ -15,6 +15,7 @@
 // determine all possible ways a piece could lock down
 std::vector<struct piece> possible(const struct piece &p)
 {
+  // TODO optimize this as it seems to be responsible for a lot of slowdown
   // poss consistss of all encountered grounded pieces
   std::vector<struct piece> poss;
 
@@ -145,7 +146,23 @@ int countgaps()
 // go through entire board, count how many air cells have minoes vertically above them (at any distance)
 int counttallgaps()
 {
+  int c = 0;
   
+  auto &board = gplayers[cur_player].board;
+  for(int i = 0; i < tot_width; i++)
+  {
+    int d = 0;
+    for(int j = tot_height-1; j >= 0; j--)
+    {
+      if(board[i][j] != NONE)
+        d = 1;
+      
+      if(board[i][j] == NONE)
+        c += d;
+    }
+  }
+
+  return c;
 }
 
 // return true if air gap exists directly below any of the piece's minoes
@@ -286,10 +303,22 @@ undo:
   return ret;
 }
 
+int getelev(struct piece &p)
+{
+  // get minimum y coordinate of 4 minoes
+  int min = tot_height*10;
+  for(auto &m : p.p)
+  {
+    min = mymin(min, m[1]);
+  }
+
+  return min;
+}
+
 // returns score depending on how many tetrominoes the current board state accepts (has no gaps)
 // rules being, accepting more tetromino types is always better
 // ties broken by how many placements are accepted by those types
-long gapscore()
+long permscore()
 {
   // current shortcomings:
   // does not consider possible clears which eliminate gaps
@@ -349,7 +378,12 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   
   // if have to create gap, pick the placement that makes the fewest/smallest gaps
   // if gaps exist and a placement can eliminate it, do that
-  // try to keep the range of heights on the stack minimal
+  
+  // TODO try to keep the range of heights on the stack minimal
+  // TODO take into account the gap counts of the options themselves
+  // TODO avoid creating picky zones
+  // TODO penalize creating inaccessible gaps
+  // TODO behave differently when near topping out
 
   auto v1 = possible(o1);
   auto v2 = possible(o2);
@@ -357,31 +391,94 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   // find the highest-scoring possibility (fewest possible gaps)
   int maxscore = 0;
   struct piece *maxpiece = &v1[0];
-  for(auto &p : v1)
-  {
-    boardpiece(p);
 
-    int gs = gapscore();
-    if(gs > maxscore)
-    {
-      maxscore = gs;
-      maxpiece = &p;
+  // 1. if I piece and quad possible, do quad
+  // 2. if no zero-gap options, pick highest-permitting lowest tall gap count lowest elevation option
+  // 3. if zero-gap options, pick highest-permitting lowest-elevation option
+
+  int zmaxperm = -1;
+  int zmaxelev = tot_height*3+10;
+  struct piece *zmaxpermpiece = 0;
+
+  int nmaxperm = -1;
+  int nmintgap = tot_height*tot_width + 10;
+  int nmaxelev = tot_height*3+10;
+  struct piece *nmaxpermpiece = 0;
+  
+  for (std::vector<struct piece> v : {std::move(v1), std::move(v2)}) {
+    for (struct piece &p : v) {
+      
+      boardpiece(p);
+      
+      // 1. I piece and quad possible
+      if(p.t == I && findclears(p).size() == 4)
+      {
+        unboardpiece(p);
+        return {p};
+      }
+
+      int gaps = counttallgaps();
+      
+      // 3. zero gaps
+      if(!gaps)
+      {
+        // highest-permitting
+        int perm = permscore();
+        int elev = getelev(p);
+        if(perm > zmaxperm)
+        {
+          zmaxperm = perm;
+          zmaxelev = elev;
+          zmaxpermpiece = &p;
+        }
+
+        // lowest elevation
+        else if(perm == zmaxperm && elev > zmaxelev )
+        {
+          zmaxelev = elev;
+          zmaxpermpiece = &p;
+        }
+      }
+
+      // 2. has gaps
+      else
+      {
+        // highest-permitting
+        int perm = permscore();
+        int tg = counttallgaps();
+        int elev = getelev(p);
+        if(perm > nmaxperm)
+        {
+          nmaxperm = perm;
+          nmintgap = tg;
+          nmaxelev = elev;
+          nmaxpermpiece = &p;
+        }
+
+        else if(perm == nmaxperm && tg < nmintgap)
+        {
+          nmintgap = tg;
+          nmaxelev = elev;
+          nmaxpermpiece = &p;
+        }
+
+        // lowest elevation
+        else if(perm == nmaxperm && tg == nmintgap && elev > maxelev )
+        {
+          nmaxelev = elev;
+          nmaxpermpiece = &p;
+        }
+      }
+
+      int gs = permscore();
+      if(gs > maxscore)
+      {
+        maxscore = gs;
+        maxpiece = &p;
+      }
+
+      unboardpiece(p);
     }
-
-    unboardpiece(p);
-  }
-  for(auto &p : v2)
-  {
-    boardpiece(p);
-
-    int gs = gapscore();
-    if(gs > maxscore)
-    {
-      maxscore = gs;
-      maxpiece = &p;
-    }
-
-    unboardpiece(p);
   }
 
   return {*maxpiece};

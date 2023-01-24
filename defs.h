@@ -187,7 +187,7 @@ struct piece placepiece(int x, int y, enum type t);
 bool stuck(struct piece &p, int dx, int dy);
 bool grounded(struct piece &p);
 
-void boardpiece(struct piece &p);
-void unboardpiece(struct piece &p);
+void boardpiece(const struct piece &p);
+void unboardpiece(const struct piece &p);
 
 #endif
