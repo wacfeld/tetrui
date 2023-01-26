@@ -491,7 +491,6 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   std::vector<struct piece> hasgaps;
   std::vector<struct piece> quads;
 
-  // for (std::vector<struct piece> v : {std::move(v1), std::move(v2)}) {
   for (struct piece &p : v1) {
 
     boardpiece(p);
@@ -510,89 +509,23 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
     if(!tgaps)
     {
       nogaps.push_back(p);
-      // // highest-permitting{{{
-      // int perm = permscore();
-      // int elev = getelev(p);
-      // if(perm > zmaxperm)
-      // {
-      //   zmaxperm = perm;
-      //   zminelev = elev;
-      //   zmaxpermpiece = &p;
-      //   // puts("replacing");
-      //   // printf("%d\n", zmaxpermpiece);
-      // }
-
-      // // lowest elevation
-      // else if(perm == zmaxperm && elev < zminelev )
-      //   // if(elev < zminelev )
-      // {
-      //   // printf("old elev %d new elev %d\n", zminelev, elev);
-      //   zminelev = elev;
-      //   zmaxpermpiece = &p;
-      // }}}}
     }
 
     else if(!gap(p))
     {
       nonewgaps.push_back(p);
-      // int perm = permscore();{{{
-      // int elev = getelev(p);
-      // if(perm > gmaxperm)
-      // {
-      //   gmaxperm = perm;
-      //   gminelev = elev;
-      //   gbestpiece = &p;
-      // }
-
-      // else if(perm == gmaxperm && elev < gminelev)
-      // {
-      //   // printf("old elev %d new elev %d\n", gminelev, elev);
-      //   gminelev = elev;
-      //   gbestpiece = &p;
-      // }}}}
     }
 
     // 2. has gaps
     else
     {
       hasgaps.push_back(p);
-      // int perm = permscore();{{{
-      // int tg = counttallgaps();
-      // int elev = getelev(p);
-      // if(tg < nmintgap)
-      // {
-      //   nmintgap = tg;
-      //   nmaxperm = perm;
-      //   nminelev = elev;
-      //   nmaxpermpiece = &p;
-      // }
-
-      // else if(perm > nmaxperm && tg == nmintgap)
-      // {
-      //   nmaxperm = perm;
-      //   nminelev = elev;
-      //   nmaxpermpiece = &p;
-      // }
-
-      // // lowest elevation
-      // else if(perm == nmaxperm && tg == nmintgap && elev < nminelev )
-      // {
-      //   // printf("old elev %d new elev %d\n", nminelev, elev);
-      //   nminelev = elev;
-      //   nmaxpermpiece = &p;
-      // }}}}
     }
-
-    // int gs = permscore();{{{
-    // if(gs > maxscore)
-    // {
-    //   maxscore = gs;
-    //   maxpiece = &p;
-    // }}}}
 
     unboardpiece(p);
   }
-  // }
+
+  fprintf(stderr, "nogaps %ld; nonewgaps %ld; hasgaps %ld\n", nogaps.size(), nonewgaps.size(), hasgaps.size());
   
   if(!nogaps.empty())
   {
