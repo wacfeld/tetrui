@@ -371,12 +371,8 @@ long permscore()
   
 // }
 
-// a hole of depth d is defined as a column of d cells where the top cell has minoes immediately left and right and no minoes above, and the bottom cell has a mino immediately below
-// drawbacks: does not recognize hole when covered
-bool ishole(int col, int mindepth)
+int holedepth(int col)
 {
-  // auto &board = gplayers[cur_player].board;
-  
   int dep = 0;
   int add = 0;
   for(int i = tot_height - 1; i <= 0; i--)
@@ -392,9 +388,17 @@ bool ishole(int col, int mindepth)
     dep += add;
   }
 
-  if(dep >= mindepth)
-    return true;
-  return false;
+  return dep;
+}
+
+// a hole of depth d is defined as a column of d cells where the top cell has minoes immediately left and right and no minoes above, and the bottom cell has a mino immediately below
+// drawbacks: does not recognize hole when covered
+bool ishole(int col, int mindepth)
+{
+  // auto &board = gplayers[cur_player].board;
+
+  int dep = holedepth(col);
+  return depth >= mindepth;
 }
 
 bool permelev_comp(struct piece &p, struct piece &q)
@@ -458,6 +462,9 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   // TODO behave differently when near topping out
   // TODO recognize and discourage creating dependencies
 
+  // column where I pieces are dropped (for 9-0, will either be leftmost or rightmost column)
+  const static int Icol = 0;
+
   auto v1 = possible(o1);
   auto v2 = possible(o2);
 
@@ -490,6 +497,19 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   std::vector<struct piece> nonewgaps;
   std::vector<struct piece> hasgaps;
   std::vector<struct piece> quads;
+
+  // check if any undesired holes exist, remember the tallest one
+  int depths
+
+    for(int i = 0; i < tot_width; i++)
+    {
+      if(i == Icol)
+        continue;
+
+      // 3-tall or taller hole
+      if(ishole(i, 3))
+    }
+  return {quads.first()};
 
   for (struct piece &p : v1) {
 
@@ -526,7 +546,11 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   }
 
   fprintf(stderr, "nogaps %ld; nonewgaps %ld; hasgaps %ld\n", nogaps.size(), nonewgaps.size(), hasgaps.size());
-  
+
+  if(!quads.empty())
+  {
+  }
+
   if(!nogaps.empty())
   {
     return {*std::max_element(nogaps.begin(), nogaps.end(), permelev_comp)};
@@ -541,10 +565,10 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   {
     return {*std::max_element(hasgaps.begin(), hasgaps.end(), tgappermelev_comp)};
   }
-  
+
   error("no possible pieces found");
   exit(1);
-  
+
   // if(zmaxpermpiece){{{
   // {
   //   // puts("z");
