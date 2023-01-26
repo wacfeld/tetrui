@@ -499,17 +499,16 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   std::vector<struct piece> quads;
 
   // check if any undesired holes exist, remember the tallest one
-  int depths
+  // int depths[tot_width] = {0};
 
-    for(int i = 0; i < tot_width; i++)
-    {
-      if(i == Icol)
-        continue;
+  // for(int i = 0; i < tot_width; i++)
+  // {
+  //   if(i == Icol)
+  //     continue;
 
-      // 3-tall or taller hole
-      if(ishole(i, 3))
-    }
-  return {quads.first()};
+  //   // 3-tall or taller hole
+  //   if(ishole(i, 3))
+  // }
 
   for (struct piece &p : v1) {
 
