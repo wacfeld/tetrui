@@ -63,7 +63,9 @@ const int garb_batch = 8; // maximum amount of pending garbage a player can rece
 
 void putpiece(struct piece &p)
 {
-  fprintf(stderr, "x:%2d y:%2d r:%d lr:%d lk:%d\n", p.c[0], p.c[1], p.r, p.lastrot, p.lastkick);
+  static char names[] = {[NONE]='-', [I]='I', [J]='J',[L]='L',[S]='S',[Z]='Z',[O]='O',[T]='T',[QBG]='Q',[GHOST]='G',[GARB]='C',[SKULL]='K'};
+  
+  fprintf(stderr, "%c x:%2d y:%2d r:%d lr:%d lk:%d\n", names[p.t], p.c[0], p.c[1], p.r, p.lastrot, p.lastkick);
 }
 
 // returns true if piece touching ground
