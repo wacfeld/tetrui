@@ -4,6 +4,7 @@
 #include "turn.h"
 
 #include <queue>
+#include <algorithm>
 
 
 // #define mark(p) do { board[p.c[0]][p.c[1]][p.rotstate] = true; } while(0)
@@ -365,16 +366,16 @@ long permscore()
 // }
 
 // filter out all piece placements that don't satisfy pred()
-std::vector<struct piece> filter(bool pred(), std::vector<struct piece> v)
-{
+// std::vector<struct piece> filter(bool pred(), std::vector<struct piece> v)
+// {
   
-}
+// }
 
 // a hole of depth d is defined as a column of d cells where the top cell has minoes immediately left and right and no minoes above, and the bottom cell has a mino immediately below
 // drawbacks: does not recognize hole when covered
 bool ishole(int col, int mindepth)
 {
-  auto &board = gplayers[cur_player].board;
+  // auto &board = gplayers[cur_player].board;
   
   int dep = 0;
   int add = 0;
@@ -393,6 +394,50 @@ bool ishole(int col, int mindepth)
 
   if(dep >= mindepth)
     return true;
+  return false;
+}
+
+bool permelev_comp(struct piece &p, struct piece &q)
+{
+  boardpiece(p);
+  int pperm = permscore();
+  unboardpiece(p);
+
+  boardpiece(q);
+  int qperm = permscore();
+  unboardpiece(q);
+
+  if(pperm < qperm)
+    return true;
+
+  else if(pperm == qperm)
+  {
+    int pe = getelev(p);
+    int qe = getelev(q);
+    return pe > qe;
+  }
+
+  return false;
+}
+
+bool tgappermelev_comp(struct piece &p, struct piece &q)
+{
+  boardpiece(p);
+  int ptg = counttallgaps();
+  unboardpiece(p);
+
+  boardpiece(q);
+  int qtg = counttallgaps();
+  unboardpiece(q);
+
+  if(ptg > qtg)
+    return true;
+  else if(ptg == qtg)
+  {
+    return permelev_comp(p, q);
+  }
+
+  return false;
 }
 
 // 9-0 stacking, where the goal is create a robust 9-wide stack on the left and use I pieces to do quads on the right (ideally back to back)
@@ -402,10 +447,10 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   // for the moment this method is very shortsighted
   // it only considers the current two options, without looking ahead
   // it compensates for that by trying to accommodate for all possible upcoming pieces
-  
+
   // if have to create gap, pick the placement that makes the fewest/smallest gaps
   // if gaps exist and a placement can eliminate it, do that
-  
+
   // TODO try to keep the range of heights on the stack minimal
   // TODO take into account the gap counts of the options themselves
   // TODO avoid creating picky zones
@@ -421,139 +466,166 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   // struct piece *maxpiece = &v1[0];
 
   // 1. if I piece and quad possible, do quad
-  // 2. if no zero-gap options, pick lowest tall gap count highest-permitting lowest elevation option
-  // 3. if zero-gap options, pick highest-permitting lowest-elevation option
+  // 2. if zero-gap options, pick highest-permitting lowest-elevation option
+  // 3. if current piece can leave no gaps immediately below, pick highest-permitting lowest-elevation option
+  // 4. if no zero-gap options, pick lowest tall gap count highest-permitting lowest elevation option
 
-  int zmaxperm = -1;
-  int zminelev = tot_height*3+10;
-  struct piece *zmaxpermpiece = 0;
-  
-  int gmaxperm = -1;
-  int gminelev = tot_height*3+10;
-  struct piece *gbestpiece = 0;
+  // int zmaxperm = -1;{{{
+  // int zminelev = tot_height*3+10;
+  // struct piece *zmaxpermpiece = 0;
 
-  int nmintgap = tot_height*tot_width + 10;
-  int nmaxperm = -1;
-  int nminelev = tot_height*3+10;
-  struct piece *nmaxpermpiece = 0;
+  // int gmaxperm = -1;
+  // int gminelev = tot_height*3+10;
+  // struct piece *gbestpiece = 0;
+
+  // int nmintgap = tot_height*tot_width + 10;
+  // int nmaxperm = -1;
+  // int nminelev = tot_height*3+10;
+  // struct piece *nmaxpermpiece = 0;}}}
 
   // concatenate vectors
   v1.insert(v1.end(), v2.begin(), v2.end());
-  
+
+  std::vector<struct piece> nogaps;
+  std::vector<struct piece> nonewgaps;
+  std::vector<struct piece> hasgaps;
+  std::vector<struct piece> quads;
+
   // for (std::vector<struct piece> v : {std::move(v1), std::move(v2)}) {
-    for (struct piece &p : v1) {
-      
-      boardpiece(p);
-      
-      // 1. I piece and quad possible
-      if(p.t == I && findclears(p).size() == 4)
-      {
-        unboardpiece(p);
-        return {p};
-      }
+  for (struct piece &p : v1) {
 
-      int tgaps = counttallgaps();
-      
-      // 3. zero gaps
-      if(!tgaps)
-      {
-        // highest-permitting
-        int perm = permscore();
-        int elev = getelev(p);
-        if(perm > zmaxperm)
-        {
-          zmaxperm = perm;
-          zminelev = elev;
-          zmaxpermpiece = &p;
-        // puts("replacing");
-        // printf("%d\n", zmaxpermpiece);
-        }
+    boardpiece(p);
 
-        // lowest elevation
-        else if(perm == zmaxperm && elev < zminelev )
-        // if(elev < zminelev )
-        {
-          // printf("old elev %d new elev %d\n", zminelev, elev);
-          zminelev = elev;
-          zmaxpermpiece = &p;
-        }
-      }
+    // 1. I piece and quad possible
+    if(p.t == I && findclears(p).size() == 4)
+    {
+      quads.push_back(p);
+      // unboardpiece(p);
+      // return {p};
+    }
 
-      else if(!gap(p))
-      {
-        int perm = permscore();
-        int elev = getelev(p);
-        if(perm > gmaxperm)
-        {
-          gmaxperm = perm;
-          gminelev = elev;
-          gbestpiece = &p;
-        }
+    int tgaps = counttallgaps();
 
-        else if(perm == gmaxperm && elev < gminelev)
-        {
-          // printf("old elev %d new elev %d\n", gminelev, elev);
-          gminelev = elev;
-          gbestpiece = &p;
-        }
-      }
-
-      // 2. has gaps
-      else
-      {
-        int perm = permscore();
-        int tg = counttallgaps();
-        int elev = getelev(p);
-        if(tg < nmintgap)
-        {
-          nmintgap = tg;
-          nmaxperm = perm;
-          nminelev = elev;
-          nmaxpermpiece = &p;
-        }
-
-        else if(perm > nmaxperm && tg == nmintgap)
-        {
-          nmaxperm = perm;
-          nminelev = elev;
-          nmaxpermpiece = &p;
-        }
-
-        // lowest elevation
-        else if(perm == nmaxperm && tg == nmintgap && elev < nminelev )
-        {
-          // printf("old elev %d new elev %d\n", nminelev, elev);
-          nminelev = elev;
-          nmaxpermpiece = &p;
-        }
-      }
-
-      // int gs = permscore();
-      // if(gs > maxscore)
+    // 3. zero gaps
+    if(!tgaps)
+    {
+      nogaps.push_back(p);
+      // // highest-permitting{{{
+      // int perm = permscore();
+      // int elev = getelev(p);
+      // if(perm > zmaxperm)
       // {
-      //   maxscore = gs;
-      //   maxpiece = &p;
+      //   zmaxperm = perm;
+      //   zminelev = elev;
+      //   zmaxpermpiece = &p;
+      //   // puts("replacing");
+      //   // printf("%d\n", zmaxpermpiece);
       // }
 
-      unboardpiece(p);
+      // // lowest elevation
+      // else if(perm == zmaxperm && elev < zminelev )
+      //   // if(elev < zminelev )
+      // {
+      //   // printf("old elev %d new elev %d\n", zminelev, elev);
+      //   zminelev = elev;
+      //   zmaxpermpiece = &p;
+      // }}}}
     }
-  // }
 
-  if(zmaxpermpiece)
-  {
-    // puts("z");
-    return {*zmaxpermpiece};
+    else if(!gap(p))
+    {
+      nonewgaps.push_back(p);
+      // int perm = permscore();{{{
+      // int elev = getelev(p);
+      // if(perm > gmaxperm)
+      // {
+      //   gmaxperm = perm;
+      //   gminelev = elev;
+      //   gbestpiece = &p;
+      // }
+
+      // else if(perm == gmaxperm && elev < gminelev)
+      // {
+      //   // printf("old elev %d new elev %d\n", gminelev, elev);
+      //   gminelev = elev;
+      //   gbestpiece = &p;
+      // }}}}
+    }
+
+    // 2. has gaps
+    else
+    {
+      hasgaps.push_back(p);
+      // int perm = permscore();{{{
+      // int tg = counttallgaps();
+      // int elev = getelev(p);
+      // if(tg < nmintgap)
+      // {
+      //   nmintgap = tg;
+      //   nmaxperm = perm;
+      //   nminelev = elev;
+      //   nmaxpermpiece = &p;
+      // }
+
+      // else if(perm > nmaxperm && tg == nmintgap)
+      // {
+      //   nmaxperm = perm;
+      //   nminelev = elev;
+      //   nmaxpermpiece = &p;
+      // }
+
+      // // lowest elevation
+      // else if(perm == nmaxperm && tg == nmintgap && elev < nminelev )
+      // {
+      //   // printf("old elev %d new elev %d\n", nminelev, elev);
+      //   nminelev = elev;
+      //   nmaxpermpiece = &p;
+      // }}}}
+    }
+
+    // int gs = permscore();{{{
+    // if(gs > maxscore)
+    // {
+    //   maxscore = gs;
+    //   maxpiece = &p;
+    // }}}}
+
+    unboardpiece(p);
   }
-  else if(gbestpiece)
+  // }
+  
+  if(!nogaps.empty())
   {
-    // puts("g");
-    return {*gbestpiece};
+    return {*std::max_element(nogaps.begin(), nogaps.end(), permelev_comp)};
   }
-  else if(nmaxpermpiece)
+
+  if(!nonewgaps.empty())
   {
-    // puts("n");
-    return {*nmaxpermpiece};
+    return {*std::max_element(nonewgaps.begin(), nonewgaps.end(), permelev_comp)};
   }
+
+  if(!hasgaps.empty())
+  {
+    return {*std::max_element(hasgaps.begin(), hasgaps.end(), tgappermelev_comp)};
+  }
+  
   error("no possible pieces found");
+  exit(1);
+  
+  // if(zmaxpermpiece){{{
+  // {
+  //   // puts("z");
+  //   return {*zmaxpermpiece};
+  // }
+  // else if(gbestpiece)
+  // {
+  //   // puts("g");
+  //   return {*gbestpiece};
+  // }
+  // else if(nmaxpermpiece)
+  // {
+  //   // puts("n");
+  //   return {*nmaxpermpiece};
+  // }}}}
   // return {*maxpiece};
 }
