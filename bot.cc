@@ -370,6 +370,31 @@ std::vector<struct piece> filter(bool pred(), std::vector<struct piece> v)
   
 }
 
+// a hole of depth d is defined as a column of d cells where the top cell has minoes immediately left and right and no minoes above, and the bottom cell has a mino immediately below
+// drawbacks: does not recognize hole when covered
+bool ishole(int col, int mindepth)
+{
+  auto &board = gplayers[cur_player].board;
+  
+  int dep = 0;
+  int add = 0;
+  for(int i = tot_height - 1; i <= 0; i--)
+  {
+    if(goodcoords(col-1, i) && goodcoords(col+1, i)) // minoes left and right occupied
+    {
+      add = 1;
+    }
+    if(goodcoords(col, i)) // mino below
+    {
+      break;
+    }
+    dep += add;
+  }
+
+  if(dep >= mindepth)
+    return true;
+}
+
 // 9-0 stacking, where the goal is create a robust 9-wide stack on the left and use I pieces to do quads on the right (ideally back to back)
 std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
 {
@@ -386,6 +411,7 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   // TODO avoid creating picky zones
   // TODO penalize creating inaccessible gaps
   // TODO behave differently when near topping out
+  // TODO recognize and discourage creating dependencies
 
   auto v1 = possible(o1);
   auto v2 = possible(o2);
