@@ -611,6 +611,8 @@ std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, con
 
   for(; !Q.empty(); Q.pop())
   {
+    int my = maxy;
+    // wait(50);
     redrawboard(bX, bY);
     SDL_UpdateWindowSurface( gwin );
     t1 = o1.t;
@@ -635,13 +637,14 @@ std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, con
       // do any clears
       auto rows = findclears(p);
       doclears(rows);
-      maxy -= rows.size();
+      my -= rows.size();
     }
     
     SDL_UpdateWindowSurface( gwin );
     
     if(ispc())
     {
+      memcpy(gplayers[cur_player].board, board, sizeof(enum type) * ARRLEN(gplayers[cur_player].board) * ARRLEN(*gplayers[cur_player].board));
       redrawboard(bX, bY);
       SDL_UpdateWindowSurface( gwin );
       return v;
@@ -656,7 +659,7 @@ std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, con
       // append them all to queue
       for(struct piece &r : poss)
       {
-        if(piecebelow(r, maxy))
+        if(piecebelow(r, my))
         {
             auto newv = v;
             newv.push_back(r);
@@ -674,7 +677,7 @@ std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, con
       // append them all to queue
       for(struct piece &r : poss)
       {
-        if(piecebelow(r, maxy))
+        if(piecebelow(r, my))
         {
           auto newv = v;
           newv.push_back(r);

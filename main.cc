@@ -266,7 +266,7 @@ int main(int argc, char **args)
 
   uint gravdelay = 1000; // ms between gravity ticks
   uint curtime; // current time in ms
-  bool dograv = true;
+  bool dograv = false;
 
   // lock down
   // int movecount = 0;
@@ -391,10 +391,13 @@ int main(int argc, char **args)
   // getchar();
 
           auto soln = calc(pc);
-          putd(soln.size());
-          boardpiece(soln[0]);
-          getchar();
-          unboardpiece(soln[0]);
+          // putd(soln.size());
+          drawpiece(soln[0]);
+          drawpiece(gplayers[cur_player].p);
+          SDL_UpdateWindowSurface(gwin);
+          wait(1000);
+          undrawpiece(soln[0]);
+          SDL_UpdateWindowSurface(gwin);
           continue;
 
           while(1)
@@ -402,7 +405,7 @@ int main(int argc, char **args)
 
             // auto soln = calc(greedy);
             auto soln = calc(ninezero);
-            putd(soln.size());
+            // putd(soln.size());
             for(auto &s : soln)
             {
               putpiece(s);
