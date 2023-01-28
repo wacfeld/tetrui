@@ -405,6 +405,29 @@ std::set<int, std::greater<int>> findclears(struct piece &p)
   return rows;
 }
 
+void doclears(std::set<int, std::greater<int>> rows)
+{
+  // execute the clears & redraw
+  // perhaps placing the column loop outside improves locality of reference
+  for(int i = 0; i < tot_width; i++)
+  {
+    // clear this column
+    // this isn't the most efficient way to clear multiple lines at a time but it shouldn't be a big deal
+    for(int r : rows) // iterate in descending order (thanks to std::greater)
+    {
+      // gboard contains an extra row at the very top so this works
+      memmove(&gplayers[cur_player].board[i][r], &gplayers[cur_player].board[i][r+1], sizeof(**gplayers[cur_player].board) * (tot_height - r));
+    }
+
+    // // redraw column
+    // for(int j = 0; j < tot_height; j++)
+    // {
+    //   // gchanged[i][j] = 1;
+    //   reboardmino(bX, bY, gplayers[cur_player].board[i][j], i, j);
+    // }
+  }
+}
+
 // check for line clears, spawn new piece and draw
 // spawn next piece (using whatever selection process) and draw
 struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (*tspinmeth)(struct piece &))
@@ -417,17 +440,19 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
   cl.tspin = threecornerT(old);
   // cl.pc will be set after clears are executed
 
-  // execute the clears & redraw
-  // perhaps placing the column loop outside improves locality of reference
+  doclears(rows);
+
+  // // execute the clears & redraw
+  // // perhaps placing the column loop outside improves locality of reference
   for(int i = 0; i < tot_width; i++)
   {
-    // clear this column
-    // this isn't the most efficient way to clear multiple lines at a time but it shouldn't be a big deal
-    for(int r : rows) // iterate in descending order (thanks to std::greater)
-    {
-      // gboard contains an extra row at the very top so this works
-      memmove(&gplayers[cur_player].board[i][r], &gplayers[cur_player].board[i][r+1], sizeof(**gplayers[cur_player].board) * (tot_height - r));
-    }
+  //   // clear this column
+  //   // this isn't the most efficient way to clear multiple lines at a time but it shouldn't be a big deal
+  //   for(int r : rows) // iterate in descending order (thanks to std::greater)
+  //   {
+  //     // gboard contains an extra row at the very top so this works
+  //     memmove(&gplayers[cur_player].board[i][r], &gplayers[cur_player].board[i][r+1], sizeof(**gplayers[cur_player].board) * (tot_height - r));
+  //   }
 
     // redraw column
     for(int j = 0; j < tot_height; j++)
