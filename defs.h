@@ -44,6 +44,8 @@ enum rotstate {ZERO=0, RIGHT=1, LEFT=2, TWO=3};
 // NONE specifies that a square is empty
 enum type {NONE=0, I=1, J=2, L=3, S=4, Z=5, O=6, T=7, QBG=8, GHOST=9, GARB=10, SKULL=11};
 
+extern char names[];
+
 struct keybinds
 {
   SDL_Keycode cmd; // command
@@ -179,6 +181,8 @@ extern struct player *gplayers;
 extern int cur_player;
 
 extern const int garb_batch;
+
+extern char *rig;
 
 /* extern enum type gboard[tot_width][tot_height+1]; */
 /* extern enum type gqueue[queue_len]; */

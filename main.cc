@@ -7,6 +7,7 @@
 #include "score.h"
 #include "bot.h"
 
+char names[] = {[NONE]='-', [I]='I', [J]='J',[L]='L',[S]='S',[Z]='Z',[O]='O',[T]='T',[QBG]='Q',[GHOST]='G',[GARB]='C',[SKULL]='K'};
 
 // arrows move + WASD + shift + space
 struct keybinds arr_wasd =
@@ -29,7 +30,7 @@ struct keybinds arr_wasd =
 // random number generator distribution
 std::uniform_int_distribution<int> dist(0,6);
 
-enum mode gmode = VERSUS;
+enum mode gmode = SINGLE;
 
 struct player *gplayers = NULL;
 int cur_player = 0; // index of current player
@@ -63,8 +64,6 @@ const int garb_batch = 8; // maximum amount of pending garbage a player can rece
 
 void putpiece(struct piece &p)
 {
-  static char names[] = {[NONE]='-', [I]='I', [J]='J',[L]='L',[S]='S',[Z]='Z',[O]='O',[T]='T',[QBG]='Q',[GHOST]='G',[GARB]='C',[SKULL]='K'};
-  
   fprintf(stderr, "%c x:%2d y:%2d r:%d lr:%d lk:%d\n", names[p.t], p.c[0], p.c[1], p.r, p.lastrot, p.lastkick);
 }
 
@@ -134,10 +133,17 @@ void unboardpiece(const struct piece &p)
     gplayers[pl].canhold = true;\
     gplayers[pl].locking = false;\
     gplayers[pl].lastgrav = curtime;\
+    hide = true;\
   } while(0)
 
-int main(int argc, char **args)
+char *rig = NULL;
+
+int main(int argc, char **argv)
 {
+  if(argc == 2)
+    rig = argv[1];
+    
+// top:
   // initialize players
   gplayers = new struct player[gmode];
 
@@ -185,7 +191,7 @@ int main(int argc, char **args)
   // getchar();
   // return 0;
 
-  bool dosplash = true;
+  bool dosplash = false;
   if(dosplash)
   {
     splash(qmeth, 20, 300);
@@ -273,7 +279,7 @@ int main(int argc, char **args)
   uint lockdelay = 500; // ms before piece locks
   // uint lastreset = 0; // when locktimer >= lockdelay, piece locks
   // bool locking = false; // becomes true whenever piece is touching the ground
-  bool doground = true;
+  bool doground = false;
 
   // after hold is used once, set to false until lock down
   // bool canhold = true;
@@ -286,6 +292,7 @@ int main(int argc, char **args)
 
   while(!quit)
   {
+      static bool hide = true;
     // update time
     curtime = SDL_GetTicks();
 
@@ -372,6 +379,12 @@ int main(int argc, char **args)
         // keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
         auto sym = e.key.keysym.sym;
 
+      // if(sym == SDLK_r)
+      // {
+      //   puts("leaving");
+      //   goto top;
+      // }
+
         // enter a command
         if(sym == binds.cmd)
         {
@@ -392,14 +405,38 @@ int main(int argc, char **args)
 
           auto soln = calc(pc);
           // putd(soln.size());
-          drawpiece(soln[0]);
+
+          if(hide)
+          {
+            hide = false;
+          }
+          else
+          {
+            drawpiece(soln[0]);
+            
+            SDL_UpdateWindowSurface(gwin);
+            wait(1000);
+            undrawpiece(soln[0]);
+          }
+          
           drawpiece(gplayers[cur_player].p);
           SDL_UpdateWindowSurface(gwin);
-          wait(1000);
-          undrawpiece(soln[0]);
-          SDL_UpdateWindowSurface(gwin);
           continue;
-
+          /*
+J
+S
+L
+T
+Z
+O
+I
+T
+L
+O
+Z
+I
+S
+*/
           while(1)
           {
 

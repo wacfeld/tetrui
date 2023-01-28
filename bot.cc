@@ -318,6 +318,19 @@ int getelev(struct piece &p)
   return max;
 }
 
+int getmaxelev()
+{
+  for(int j = tot_height-1; j >= 0; j--)
+  {
+    for(int i = 0; i < tot_width; i++)
+    {
+      if(gplayers[cur_player].board[i][j] != NONE)
+        return j;
+    }
+  }
+  return -1;
+}
+
 // returns score depending on how many tetrominoes the current board state accepts (has no gaps)
 // rules being, accepting more tetromino types is always better
 // ties broken by how many placements are accepted by those types
@@ -583,7 +596,8 @@ bool piecebelow(struct piece &p, int maxy)
 // for example, solve a PCO setup
 std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
 {
-  int maxy = 3; // going to assume for now that all pieces must be placed within the first 4 rows
+  // int maxy = 3; // going to assume for now that all pieces must be placed within the first 4 rows
+  int maxy = getmaxelev();
   long unsigned maxdep = 4;
   
   // make copy of grid
@@ -647,6 +661,7 @@ std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, con
       memcpy(gplayers[cur_player].board, board, sizeof(enum type) * ARRLEN(gplayers[cur_player].board) * ARRLEN(*gplayers[cur_player].board));
       redrawboard(bX, bY);
       SDL_UpdateWindowSurface( gwin );
+      fprintf(stderr, "pc: found perfect clear");
       return v;
     }
 

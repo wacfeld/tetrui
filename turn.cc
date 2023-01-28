@@ -172,10 +172,36 @@ void swap(enum type &a, enum type &b)
   b = temp;
 }
 
+enum type char2type(char c)
+{
+  c = tolower(c);
+  if(c == 'i')
+    return I;
+  else if(c == 'j')
+    return J;
+  else if(c == 'l')
+    return L;
+  else if(c == 's')
+    return S;
+  else if(c == 'z')
+    return Z;
+  else if(c == 't')
+    return T;
+  else if(c == 'o')
+    return O;
+
+  fprintf(stderr, "char2type: invalid char %c\n", c);
+  exit(1);
+}
+
 // get a single piece type using the 7-bag method
 // uses static variables to maintain state
 enum type bag7(bool reset)
 {
+  if(rig && *rig)
+  {
+    return char2type(*rig++);
+  }
   // static enum type bag[7];
   // if not already initialized, initialize player bag
   if(gplayers[cur_player].bag == NULL)
@@ -216,10 +242,12 @@ enum type bag7(bool reset)
       int k = dist(gplayers[cur_player].gen) % 7;
       swap(gplayers[cur_player].bag[j], gplayers[cur_player].bag[k]);
     }
+
   }
 
   // dish out 1 piece
   gplayers[cur_player].siz--;
+  fprintf(stderr, "%c\n", names[gplayers[cur_player].bag[gplayers[cur_player].siz]]);
   return gplayers[cur_player].bag[gplayers[cur_player].siz];
 }
 
@@ -337,7 +365,7 @@ void proc_garb(struct clear &cl)
 {
   // print out clear/garbage info
   int garb = garbage(cl, guidelinecombo, guidelinebtb);
-  putclear(cl);
+  // putclear(cl);
   if(garb)
   {
     fprintf(stderr, " %d garbage sent/cancelled\n", garb);
@@ -473,6 +501,7 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
 
 
   // if not singleplayer, handle garbage
+  putclear(cl);
   if(gmode != SINGLE)
   {
     proc_garb(cl);
