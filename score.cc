@@ -7,23 +7,24 @@
 void putclear(struct clear &c)
 {
   if(c.tspin)
-    fprintf(stderr, "tspin ");
+    fprintf(stderr, " tspin");
 
   if(c.lines == 0)
     return;
   else if(c.lines == 1)
-    fprintf(stderr, "single!");
+    fprintf(stderr, " single");
   else if(c.lines == 2)
-    fprintf(stderr, "double!");
+    fprintf(stderr, " double");
   else if(c.lines == 3)
-    fprintf(stderr, "triple!");
+    fprintf(stderr, " triple");
   else if(c.lines == 4)
-    fprintf(stderr, "quad!");
+    fprintf(stderr, " tetris");
   else
     error("c.lines is %d\n", c.lines);
 
   if(c.pc)
-    printf(" perfect clear!");
+    fprintf(stderr, " perfect clear");
+  fputc('!', stderr);
 
   // putchar('\n');
 }
@@ -223,3 +224,16 @@ int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(s
 
   return lines;
 }
+
+bool ispc()
+{
+  // if bottom row empty, then perfect clear has occurred
+  bool pc = true;
+  for(int i = 0; i < tot_width; i++)
+  {
+    if(gplayers[cur_player].board[i][0] != NONE)
+      pc = false;
+  }
+  return pc;
+}
+

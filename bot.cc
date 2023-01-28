@@ -2,6 +2,7 @@
 #include "bot.h"
 #include "movement.h"
 #include "turn.h"
+#include "score.h"
 
 #include <queue>
 #include <algorithm>
@@ -398,7 +399,7 @@ bool ishole(int col, int mindepth)
   // auto &board = gplayers[cur_player].board;
 
   int dep = holedepth(col);
-  return depth >= mindepth;
+  return dep >= mindepth;
 }
 
 bool permelev_comp(struct piece &p, struct piece &q)
@@ -463,7 +464,7 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   // TODO recognize and discourage creating dependencies
 
   // column where I pieces are dropped (for 9-0, will either be leftmost or rightmost column)
-  const static int Icol = 0;
+  // const static int Icol = 0;
 
   auto v1 = possible(o1);
   auto v2 = possible(o2);
@@ -568,20 +569,130 @@ std::vector<struct piece> ninezero(const struct piece &o1, const struct piece &o
   error("no possible pieces found");
   exit(1);
 
-  // if(zmaxpermpiece){{{
-  // {
-  //   // puts("z");
-  //   return {*zmaxpermpiece};
-  // }
-  // else if(gbestpiece)
-  // {
-  //   // puts("g");
-  //   return {*gbestpiece};
-  // }
-  // else if(nmaxpermpiece)
-  // {
-  //   // puts("n");
-  //   return {*nmaxpermpiece};
-  // }}}}
-  // return {*maxpiece};
+}
+
+bool piecebelow(struct piece &p, int maxy)
+{
+  for(auto &m : p.p)
+    if(m[1] > maxy)
+      return false;
+  return true;
+}
+
+// solve a perfect clear
+// for example, solve a PCO setup
+std::vector<struct piece> pc(const struct piece &o1, const struct piece &o2, const enum type *queue, int qeye)
+{
+  int maxy = 3; // going to assume for now that all pieces must be placed within the first 4 rows
+  long unsigned maxdep = 4;
+  
+  // make copy of grid
+  enum type board[ARRLEN(gplayers[cur_player].board)][ARRLEN(*gplayers[cur_player].board)];
+  memcpy(board, gplayers[cur_player].board, sizeof(enum type) * ARRLEN(gplayers[cur_player].board) * ARRLEN(*gplayers[cur_player].board));
+  
+  std::queue<std::vector<struct piece>> Q;
+  auto v1 = possible(o1);
+  auto v2 = possible(o2);
+
+  for(auto &p : v1)
+  {
+    if(piecebelow(p, maxy))
+      Q.push({p});
+  }
+  for(auto &p : v2)
+  {
+    if(piecebelow(p, maxy))
+      Q.push({p});
+  }
+  
+  enum type t1;
+  enum type t2;
+  int qi;
+
+  for(; !Q.empty(); Q.pop())
+  {
+    redrawboard(bX, bY);
+    SDL_UpdateWindowSurface( gwin );
+    t1 = o1.t;
+    t2 = o2.t;
+    qi = qeye;
+    
+    // get vector
+    auto &v = Q.front();
+
+    if(v.size() > maxdep)
+    {
+      continue;
+    }
+    
+    // run through the vector (place pieces on board and advance state variables)
+    for(auto &p : v)
+    {
+      advance(p.t, t1, t2, queue, qi);
+      boardpiece(p);
+      redrawboard(bX,bY);
+
+      // do any clears
+      auto rows = findclears(p);
+      doclears(rows);
+      maxy -= rows.size();
+    }
+    
+    SDL_UpdateWindowSurface( gwin );
+    
+    if(ispc())
+    {
+      redrawboard(bX, bY);
+      SDL_UpdateWindowSurface( gwin );
+      return v;
+    }
+
+
+    if(t1 != NONE) // try selecting t1
+    {
+      struct piece q = spawnpiece(t1);
+      auto poss = possible(q);
+
+      // append them all to queue
+      for(struct piece &r : poss)
+      {
+        if(piecebelow(r, maxy))
+        {
+            auto newv = v;
+            newv.push_back(r);
+            // putd(qc++);
+            Q.push(newv);
+        }
+      }
+    }
+
+    if(t2 != NONE) // try selecting t2
+    {
+      struct piece q = spawnpiece(t2);
+      auto poss = possible(q);
+
+      // append them all to queue
+      for(struct piece &r : poss)
+      {
+        if(piecebelow(r, maxy))
+        {
+          auto newv = v;
+          newv.push_back(r);
+          // putd(qc++);
+          Q.push(newv);
+        }
+      }
+    }
+
+
+    // reset board
+    memcpy(gplayers[cur_player].board, board, sizeof(enum type) * ARRLEN(gplayers[cur_player].board) * ARRLEN(*gplayers[cur_player].board));
+  }
+
+
+  redrawboard(bX, bY);
+  SDL_UpdateWindowSurface( gwin );
+  fprintf(stderr, "pc: failed to find perfect clear\n");
+  auto ret = {v1[0]};
+  return ret;
 }

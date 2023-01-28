@@ -10,4 +10,6 @@ bool threecornerT(struct piece &p);
 int guidelinecombo(struct clear &cl);
 int guidelinebtb(struct clear &cl);
 int garbage(struct clear &cl, int (*combometh)(struct clear &), int (*btbmeth)(struct clear &));
+
+bool ispc();
 #endif

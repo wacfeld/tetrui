@@ -128,6 +128,17 @@ void reboardmino(int X, int Y, enum type t, int col, int row)
   // changed[col][row] = 0;
 }
 
+void redrawboard(int X, int Y)
+{
+  for(int i = 0; i < tot_width; i++)
+  {
+    for(int j = 0; j < tot_height; j++)
+    {
+      reboardmino(X, Y, gplayers[cur_player].board[i][j], i, j);
+    }
+  }
+}
+
 void queuemino(int X, int Y, enum type t, int col, int row)
 {
   // check bounds

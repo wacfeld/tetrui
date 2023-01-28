@@ -463,13 +463,13 @@ struct piece nextpiece(struct piece &old, enum type (*qmeth)(bool reset), bool (
   }
 
   // if bottom row empty, then perfect clear has occurred
-  bool pc = true;
-  for(int i = 0; i < tot_width; i++)
-  {
-    if(gplayers[cur_player].board[i][0] != NONE)
-      pc = false;
-  }
-  cl.pc = pc;
+  // bool pc = true;
+  // for(int i = 0; i < tot_width; i++)
+  // {
+  //   if(gplayers[cur_player].board[i][0] != NONE)
+  //     pc = false;
+  // }
+  cl.pc = ispc();
 
 
   // if not singleplayer, handle garbage

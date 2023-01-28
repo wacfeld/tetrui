@@ -76,4 +76,5 @@ struct piece drawghost(struct piece &p);
 
 void skullmeter(int pl, int c);
 
+void redrawboard(int X, int Y);
 #endif

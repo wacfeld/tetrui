@@ -390,6 +390,13 @@ int main(int argc, char **args)
   // }
   // getchar();
 
+          auto soln = calc(pc);
+          putd(soln.size());
+          boardpiece(soln[0]);
+          getchar();
+          unboardpiece(soln[0]);
+          continue;
+
           while(1)
           {
 

@@ -18,6 +18,8 @@
 // print error message to stderr & exit
 #define error(fmt, ...) do { fprintf(stderr, "%s: %d: %s: " fmt, __FILE__, __LINE__, __func__ __VA_OPT__(,) __VA_ARGS__); getchar();/*close(); exit(1);*/ } while(0)
 
+#define ARRLEN(x) (sizeof(x)/sizeof(*x))
+
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
