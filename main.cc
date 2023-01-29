@@ -6,6 +6,7 @@
 #include "turn.h"
 #include "score.h"
 #include "bot.h"
+#include <iostream>
 
 char names[] = {[NONE]='-', [I]='I', [J]='J',[L]='L',[S]='S',[Z]='Z',[O]='O',[T]='T',[QBG]='Q',[GHOST]='G',[GARB]='C',[SKULL]='K'};
 
@@ -13,18 +14,20 @@ char names[] = {[NONE]='-', [I]='I', [J]='J',[L]='L',[S]='S',[Z]='Z',[O]='O',[T]
 struct keybinds arr_wasd =
 {
   // keycodes: https://wiki.libsdl.org/SDL2/SDL_Keycode
-  .cmd = SDLK_SLASH,
+  .save = SDLK_s,
+  .cmd = SDLK_z,
 
   .hd = SDLK_SPACE,
   .h  = SDLK_LSHIFT,
 
+  .up = SDLK_UP,
   .l  = SDLK_LEFT,
   .r  = SDLK_RIGHT,
   .sd = SDLK_DOWN,
 
   .ccw = SDLK_a,
-  .cw = SDLK_d,
-  .f  = SDLK_s
+  .cw = SDLK_e,
+  .f  = SDLK_o
 };
 
 // random number generator distribution
@@ -137,6 +140,7 @@ void unboardpiece(const struct piece &p)
   } while(0)
 
 char *rig = NULL;
+std::string order;
 
 int main(int argc, char **argv)
 {
@@ -273,6 +277,8 @@ int main(int argc, char **argv)
   uint gravdelay = 1000; // ms between gravity ticks
   uint curtime; // current time in ms
   bool dograv = false;
+  bool infhold = true;
+  bool allowup = true;
 
   // lock down
   // int movecount = 0;
@@ -496,6 +502,13 @@ S
           continue;
         }
 
+        if(sym == binds.save)
+        {
+          std::cout << std::endl << order;
+          fprintf(stderr, "saved to stdout");
+          continue;
+        }
+
         // skip lost players
         if(gplayers[pl].lost)
           continue;
@@ -503,10 +516,13 @@ S
         bool moved = false;
 
         // translation
-        // if(sym == SDLK_UP)
-        // {
-        //   moved = movepiece(p, 0, 1, 0);
-        // }
+        if(sym == binds.up && allowup)
+        {
+          // moved = movepiece(p, 0, 1, 0);
+          undrawpiece(gplayers[pl].p);
+          moved = movepiece(gplayers[pl].p, 0, 1, 0);
+          drawpiece(gplayers[pl].p);
+        }
         if(sym == binds.sd)
         {
           undrawpiece(gplayers[pl].p);
@@ -556,7 +572,7 @@ S
 
         else if(sym == binds.h)
         {
-          if(gplayers[pl].canhold)
+          if(gplayers[pl].canhold || infhold)
           {
             // perform hold
             undrawpiece(gplayers[pl].p);

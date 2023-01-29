@@ -200,6 +200,7 @@ enum type bag7(bool reset)
 {
   if(rig && *rig)
   {
+    order += *rig;
     return char2type(*rig++);
   }
   // static enum type bag[7];
@@ -248,6 +249,7 @@ enum type bag7(bool reset)
   // dish out 1 piece
   gplayers[cur_player].siz--;
   fprintf(stderr, "%c\n", names[gplayers[cur_player].bag[gplayers[cur_player].siz]]);
+  order += names[gplayers[cur_player].bag[gplayers[cur_player].siz]];
   return gplayers[cur_player].bag[gplayers[cur_player].siz];
 }
 

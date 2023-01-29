@@ -48,9 +48,11 @@ extern char names[];
 
 struct keybinds
 {
+  SDL_Keycode save; // save piece order
   SDL_Keycode cmd; // command
   SDL_Keycode hd; // hard drop
   SDL_Keycode h; // hold
+  SDL_Keycode up; // move up
   SDL_Keycode l; // move left
   SDL_Keycode r; // move right
   SDL_Keycode sd; // soft drop
@@ -183,6 +185,7 @@ extern int cur_player;
 extern const int garb_batch;
 
 extern char *rig;
+extern std::string order;
 
 /* extern enum type gboard[tot_width][tot_height+1]; */
 /* extern enum type gqueue[queue_len]; */

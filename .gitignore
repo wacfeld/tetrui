@@ -2,6 +2,7 @@ main
 *~
 *.o
 *.a
+redo.txt
 *.d
 *.sw*
 *.out
