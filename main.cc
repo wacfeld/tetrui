@@ -218,6 +218,19 @@ void startbot()
       SDL_UpdateWindowSurface(gwin);
       // wait(200);
     }
+
+    SDL_Event e;
+    while( SDL_PollEvent( &e ) != 0 )
+    {
+      //User requests quit
+      if( e.type == SDL_QUIT )
+      {
+        quit = true;
+        fprintf(stderr, "quitting\n");
+        close();
+        exit(0);
+      }
+    }
   }
 }
 
@@ -371,6 +384,7 @@ int main(int argc, char **argv)
 
   SDL_Event e;
 
+  startbot();
 
   while(!quit)
   {
