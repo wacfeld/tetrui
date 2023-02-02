@@ -3,6 +3,8 @@ main
 *.o
 *.a
 redo*.txt
+gmon/
+output.txt
 *.d
 *.sw*
 *.out
