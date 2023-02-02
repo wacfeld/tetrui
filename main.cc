@@ -142,6 +142,38 @@ void unboardpiece(const struct piece &p)
 char *rig = NULL;
 std::string order;
 
+// state variables {{{
+enum type (*qmeth)(bool reset) = bag7;
+bool (*tspinmeth)(struct piece &) = threecornerT;
+bool dosplash = false;
+
+// abbreviation for convenience
+int &pl = cur_player;
+
+struct keybinds binds = arr_wasd;
+
+uint gravdelay = 1000; // ms between gravity ticks
+uint curtime; // current time in ms
+bool dograv = false;
+bool infhold = true;
+bool allowup = true;
+
+// lock down
+// int movecount = 0;
+uint lockdelay = 500; // ms before piece locks
+// uint lastreset = 0; // when locktimer >= lockdelay, piece locks
+// bool locking = false; // becomes true whenever piece is touching the ground
+bool doground = false;
+
+// after hold is used once, set to false until lock down
+// bool canhold = true;
+
+bool quit = false;
+
+// different from cur_player. player who is currently being controlled by keyboard
+int cont_player = 0;
+//}}}
+
 int main(int argc, char **argv)
 {
   if(argc == 2)
@@ -173,9 +205,6 @@ int main(int argc, char **argv)
   // draw hold, board, queue
   initscreen();
 
-  enum type (*qmeth)(bool reset) = bag7;
-  bool (*tspinmeth)(struct piece &) = threecornerT;
-
   
   // struct piece p = spawnpiece(I);
   // SDL_UpdateWindowSurface( gwin );
@@ -195,7 +224,6 @@ int main(int argc, char **argv)
   // getchar();
   // return 0;
 
-  bool dosplash = false;
   if(dosplash)
   {
     splash(qmeth, 20, 300);
@@ -204,8 +232,6 @@ int main(int argc, char **argv)
   // reset queue
   // qmeth(true);
 
-  // abbreviation for convenience
-  int &pl = cur_player;
 
   // fill & draw the queue
   for(pl = 0; pl < gmode; pl++)
@@ -243,6 +269,7 @@ int main(int argc, char **argv)
   // TODO proper move reset
   // TODO DAS/ARR
   // TODO edit mode
+  // TODO edit, load, save
   // DONE sync queues
 
 
@@ -262,7 +289,6 @@ int main(int argc, char **argv)
 
   SDL_UpdateWindowSurface( gwin );
 
-  struct keybinds binds = arr_wasd;
 
   // start the game
 
@@ -274,27 +300,8 @@ int main(int argc, char **argv)
   }
   pl = 0;
 
-  uint gravdelay = 1000; // ms between gravity ticks
-  uint curtime; // current time in ms
-  bool dograv = false;
-  bool infhold = true;
-  bool allowup = true;
-
-  // lock down
-  // int movecount = 0;
-  uint lockdelay = 500; // ms before piece locks
-  // uint lastreset = 0; // when locktimer >= lockdelay, piece locks
-  // bool locking = false; // becomes true whenever piece is touching the ground
-  bool doground = false;
-
-  // after hold is used once, set to false until lock down
-  // bool canhold = true;
-
-  bool quit = false;
   SDL_Event e;
 
-  // different from cur_player. player who is currently being controlled by keyboard
-  int cont_player = 0;
 
   while(!quit)
   {
