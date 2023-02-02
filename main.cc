@@ -136,7 +136,7 @@ void unboardpiece(const struct piece &p)
     gplayers[pl].canhold = true;\
     gplayers[pl].locking = false;\
     gplayers[pl].lastgrav = curtime;\
-    hide = true;\
+    hidesoln = true;\
   } while(0)
 
 char *rig = NULL;
@@ -172,7 +172,76 @@ bool quit = false;
 
 // different from cur_player. player who is currently being controlled by keyboard
 int cont_player = 0;
+
+bool hidesoln = true;
 //}}}
+
+void startbot()
+{
+  while(1)
+  {
+
+    // auto soln = calc(greedy);
+    auto soln = calc(ninezero);
+    // putd(soln.size());
+    for(auto &s : soln)
+    {
+      putpiece(s);
+      undrawghost(gplayers[pl].ghost);
+      drawpiece(s);
+      SDL_UpdateWindowSurface(gwin);
+      // getchar();
+      // wait(200);
+
+      // hold called for
+      if(s.t != gplayers[pl].p.t)
+      {
+        undrawpiece(gplayers[pl].p);
+        gplayers[pl].p = swaphold(gplayers[pl].p, qmeth);
+
+        undrawghost(gplayers[pl].ghost);
+        // gplayers[pl].ghost = drawghost(gplayers[pl].p);
+        drawholdpiece(gplayers[cur_player].hold);
+      }
+
+      boardpiece(s);
+      gplayers[pl].p = s;
+
+      gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
+      gplayers[pl].ghost = drawghost(gplayers[pl].p);
+
+      drawpiece(gplayers[pl].p);
+      drawqueue();
+
+      nextturn();
+
+      SDL_UpdateWindowSurface(gwin);
+      // wait(200);
+    }
+  }
+}
+
+void searchforpc()
+{
+  auto soln = calc(pc);
+  // putd(soln.size());
+
+  if(hidesoln)
+  {
+    hidesoln = false;
+  }
+  else
+  {
+    drawpiece(soln[0]);
+
+    SDL_UpdateWindowSurface(gwin);
+    wait(1000);
+    undrawpiece(soln[0]);
+  }
+
+  drawpiece(gplayers[cur_player].p);
+  SDL_UpdateWindowSurface(gwin);
+}
 
 int main(int argc, char **argv)
 {
@@ -305,7 +374,6 @@ int main(int argc, char **argv)
 
   while(!quit)
   {
-      static bool hide = true;
     // update time
     curtime = SDL_GetTicks();
 
@@ -416,81 +484,10 @@ int main(int argc, char **argv)
   // }
   // getchar();
 
-          auto soln = calc(pc);
-          // putd(soln.size());
-
-          if(hide)
-          {
-            hide = false;
-          }
-          else
-          {
-            drawpiece(soln[0]);
-            
-            SDL_UpdateWindowSurface(gwin);
-            wait(1000);
-            undrawpiece(soln[0]);
-          }
-          
-          drawpiece(gplayers[cur_player].p);
-          SDL_UpdateWindowSurface(gwin);
+          searchforpc();
           continue;
-          /*
-J
-S
-L
-T
-Z
-O
-I
-T
-L
-O
-Z
-I
-S
-*/
-          while(1)
-          {
-
-            // auto soln = calc(greedy);
-            auto soln = calc(ninezero);
-            // putd(soln.size());
-            for(auto &s : soln)
-            {
-              putpiece(s);
-              undrawghost(gplayers[pl].ghost);
-              drawpiece(s);
-              SDL_UpdateWindowSurface(gwin);
-              // getchar();
-              // wait(200);
-
-              // hold called for
-              if(s.t != gplayers[pl].p.t)
-              {
-                undrawpiece(gplayers[pl].p);
-                gplayers[pl].p = swaphold(gplayers[pl].p, qmeth);
-
-                undrawghost(gplayers[pl].ghost);
-                // gplayers[pl].ghost = drawghost(gplayers[pl].p);
-                drawholdpiece(gplayers[cur_player].hold);
-              }
-
-              boardpiece(s);
-              gplayers[pl].p = s;
-              
-              gplayers[pl].p = nextpiece(gplayers[pl].p, qmeth, tspinmeth);
-              gplayers[pl].ghost = drawghost(gplayers[pl].p);
-
-              drawpiece(gplayers[pl].p);
-              drawqueue();
-              
-              nextturn();
-              
-              SDL_UpdateWindowSurface(gwin);
-              // wait(200);
-            }
-          }
+          
+          startbot();
           
           // char cmd[1000];
           // fprintf(stderr, "> ");
