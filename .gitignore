@@ -5,6 +5,7 @@ main
 redo*.txt
 gmon/
 output.txt
+now.txt
 *.d
 *.sw*
 *.out

@@ -1,3 +1,4 @@
+# GMON_OUT_PREFIX=`Now`
 CXX = g++
 CXXFLAGS = -std=c++11 -pg -g -MMD -Wall -lSDL2main -lSDL2 -fcompare-debug-second
 EXEC = $(shell basename $(CURDIR)).out
@@ -10,4 +11,7 @@ ${EXEC}: ${OBJECTS}
 .PHONY: clean
 clean:
 	rm ${OBJECTS} ${DEPENDS} ${EXEC}
-
+# gmon: gmon.out
+# 	fname=gmon/gmon_$(Now).out
+# 	if [-f "$fname"]; then		echo "$fname exists.";	else		mv gmon.out $fname;	fi
+	
